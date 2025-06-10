@@ -1,0 +1,13 @@
+{
+	"ClassName": "Folder",
+	"Children": [
+		{
+			"Name": "BadgeBindable",
+			"ClassName": "BindableEvent"
+		},
+		{
+			"Name": "BadgeBindableFunction",
+			"ClassName": "BindableFunction"
+		}
+	]
+}

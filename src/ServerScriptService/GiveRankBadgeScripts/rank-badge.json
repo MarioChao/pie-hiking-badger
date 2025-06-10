@@ -1,0 +1,10 @@
+{
+	"S+": {"badgeId": 0, "badgeName": ""},
+	"S": {"badgeId": 0, "badgeName": ""},
+	"A+": {"badgeId": 530359911053228, "badgeName": "Pie Hiking A+"},
+	"A": {"badgeId": 2569619644605836, "badgeName": "Pie Hiking A"},
+	"Master": {"badgeId": 2613815999445788, "badgeName": "Pie Hiking Master"},
+	"Pro": {"badgeId": 1880693818605075, "badgeName": "Pie Hiking Pro"},
+	"Novice": {"badgeId": 130045237621517, "badgeName": "Pie Hiking Novice"},
+	"Beginner": {"badgeId": 0, "badgeName": ""}
+}
