@@ -30,6 +30,9 @@ local RankBindableFunction = RankEvents.RankBindableFunction
 local CameraEvents = ReplicatedStorage.CameraEvents
 local CameraRemote = CameraEvents.CameraRemote
 
+local MenuEvents = ReplicatedStorage.MenuEvents
+local MenuRemote = MenuEvents.MenuRemote
+
 
 ---------- Variables ----------
 
@@ -47,7 +50,7 @@ end
 
 ---------- Local functions ----------
 
-local function displayBillboardGuiText(text: string, particles: number)
+local function displayBillboardGuiText(text: string, particles: number, parent: Instance)
 	local count = 0
 	for i = 1, particles do
 		task.defer(function()
@@ -76,7 +79,7 @@ local function displayBillboardGuiText(text: string, particles: number)
 
 			-- Parent instances
 			textLabel.Parent = billboardGui
-			billboardGui.Parent = RankTestInteractivePart
+			billboardGui.Parent = parent
 
 			-- Move gui configurations
 			local startTime = time()
@@ -152,11 +155,23 @@ local function displayRank(player: Player)
 	end
 
 
+	-- Update menu
+	MenuRemote:FireClient(player, "UpdateRank", rank)
+
 	-- Set leaderstats
 	LeaderstatsModule.setData(player, "Rank", rank)
 
 	-- Display rank on gui
-	displayBillboardGuiText(rank, 32)
+	task.defer(function()
+		displayBillboardGuiText(rank, 32, RankTestInteractivePart)
+	end)
+	for _, object in RankTestInteraction.ParticleParts:GetChildren() do
+		if object:IsA("BasePart") then
+			task.defer(function()
+				displayBillboardGuiText(rank, 2, object)
+			end)
+		end
+	end
 end
 
 

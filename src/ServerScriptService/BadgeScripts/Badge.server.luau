@@ -4,6 +4,7 @@
 
 ---------- Services ----------
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = script.Parent.Parent.Parent:FindFirstChild("ServerStorage") or game:GetService("ServerStorage")
 
 
@@ -11,7 +12,7 @@ local ServerStorage = script.Parent.Parent.Parent:FindFirstChild("ServerStorage"
 
 local BadgeScripts = script.Parent
 local BadgeAward = require(BadgeScripts.BadgeAward)
-local CachedBadgeCheck = require(BadgeScripts.BadgeCheck.CachedBadgeCheck)
+local CachedBadgeCheck = require(ReplicatedStorage.BadgeModules.BadgeCheck.CachedBadgeCheck)
 
 
 ---------- Instances ----------

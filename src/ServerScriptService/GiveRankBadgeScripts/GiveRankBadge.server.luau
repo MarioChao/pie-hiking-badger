@@ -36,7 +36,7 @@ local RankBindableFunction = RankEvents.RankBindableFunction
 
 ---------- Variables ----------
 
-local rankIndex: {[string]: number} = {}
+local rankPriority = RankThresholds.rankPriority
 
 local userIdThrottleTable: {[number]: boolean} = {}
 
@@ -67,9 +67,14 @@ local function onGiveBadgeWithRank(player: Player, rank: string)
 		return
 	end
 
-	-- Validate player rank
+	-- Get player rank
 	local playerActualRank = RankBindableFunction:Invoke("GetPlayerTestedRank", player)
-	if not (rankIndex[playerActualRank] <= rankIndex[rank]) then
+
+	-- Validate rank priority
+	if not (rankPriority[playerActualRank] and rankPriority[rank]) then
+		return
+	end
+	if not (rankPriority[playerActualRank] >= rankPriority[rank]) then
 		return
 	end
 
@@ -77,15 +82,6 @@ local function onGiveBadgeWithRank(player: Player, rank: string)
 	local badgeId = RankBadge[rank].badgeId
 	local badgeName = RankBadge[rank].badgeName
 	BadgeBindable:Fire("AwardBadge", player, badgeId, badgeName)
-end
-
-
----------- Set up functions ----------
-
-local function setUpRankPriority()
-	for index, rankThreshold in RankThresholds.rankThresholds do
-		rankIndex[rankThreshold.rankTitle] = index
-	end
 end
 
 
@@ -99,7 +95,5 @@ end
 
 
 ---------- Calling / connecting functions ----------
-
-setUpRankPriority()
 
 GiveRankBadgeRemote.OnServerEvent:Connect(onGiveRankBadgeServerEvent)

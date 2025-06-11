@@ -27,6 +27,9 @@ local BadgeBindableFunction = BadgeEvents.BadgeBindableFunction
 local RankEvents = ServerStorage.RankEvents
 local RankBindableFunction = RankEvents.RankBindableFunction
 
+local MenuEvents = ReplicatedStorage.MenuEvents
+local MenuRemote = MenuEvents.MenuRemote
+
 
 ---------- Variables ----------
 
@@ -98,6 +101,7 @@ local function onPlayerAdded(player: Player)
 	local testedRank = DSModule.getData(DSTypes.DSName.TestedRank, player)
 	testedPlayerRank[player.UserId] = testedRank
 	LeaderstatsModule.setData(player, "Rank", testedRank)
+	MenuRemote:FireClient(player, "UpdateRank", testedRank)
 end
 
 local function onPlayerRemoving(player: Player)
