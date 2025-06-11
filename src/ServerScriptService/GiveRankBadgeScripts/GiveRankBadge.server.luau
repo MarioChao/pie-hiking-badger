@@ -68,7 +68,7 @@ local function onGiveBadgeWithRank(player: Player, rank: string)
 	end
 
 	-- Validate player rank
-	local playerActualRank = RankBindableFunction:Invoke("GetPlayerRank", player)
+	local playerActualRank = RankBindableFunction:Invoke("GetPlayerTestedRank", player)
 	if not (rankIndex[playerActualRank] <= rankIndex[rank]) then
 		return
 	end

@@ -4,6 +4,7 @@
 
 ---------- Services ----------
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = script.Parent.Parent.Parent:FindFirstChild("ReplicatedStorage") or game:GetService("ReplicatedStorage")
 local ServerStorage = script.Parent.Parent.Parent:FindFirstChild("ServerStorage") or game:GetService("ServerStorage")
 
@@ -12,12 +13,16 @@ local ServerStorage = script.Parent.Parent.Parent:FindFirstChild("ServerStorage"
 
 local RankThresholds = require(ReplicatedStorage.RankThresholds)
 
+local LeaderstatsModule = require(ServerStorage.LeaderstatsModule)
+
+local DSModule = require(ServerStorage.DataStoreModule)
+local DSTypes = DSModule.DSTypes
+
 
 ---------- Instances ----------
 
 local BadgeEvents = ServerStorage.BadgeEvents
 local BadgeBindableFunction = BadgeEvents.BadgeBindableFunction
-
 
 local RankEvents = ServerStorage.RankEvents
 local RankBindableFunction = RankEvents.RankBindableFunction
@@ -27,6 +32,8 @@ local RankBindableFunction = RankEvents.RankBindableFunction
 
 local badgeTierIds = RankThresholds.badgeTierIds
 local rankThresholds = RankThresholds.rankThresholds
+
+local testedPlayerRank: {[number]: number} = {}
 
 
 ---------- Local functions ----------
@@ -42,7 +49,7 @@ local function countBadges(player: Player, badgeIds: {number})
 	return count
 end
 
-local function getRank(player: Player)
+local function getRank_fromBadges(player: Player)
 	for _, rankThreshold in rankThresholds do
 		-- Check conditions
 		local conditionMet = true
@@ -65,16 +72,52 @@ local function getRank(player: Player)
 	return "???"
 end
 
+local function testAndGetRank(player: Player)
+	local rank = getRank_fromBadges(player)
+	testedPlayerRank[player.UserId] = rank
+	return rank
+end
+
+local function getTestedRank(player: Player)
+	return testedPlayerRank[player.UserId]
+end
+
 
 ---------- Event functions ----------
 
 local function onRankInvoke(mode: string, ...)
-	if mode == "GetPlayerRank" then
-		return getRank(...)
+	if mode == "TestAndGetPlayerRank" then
+		return testAndGetRank(...)
+	elseif mode == "GetPlayerTestedRank" then
+		return getTestedRank(...)
 	end
+end
+
+local function onPlayerAdded(player: Player)
+	-- Retrieve tested rank
+	local testedRank = DSModule.getData(DSTypes.DSName.TestedRank, player)
+	testedPlayerRank[player.UserId] = testedRank
+	LeaderstatsModule.setData(player, "Rank", testedRank)
+end
+
+local function onPlayerRemoving(player: Player)
+	-- Store tested rank & remove from table
+	local testedRank = testedPlayerRank[player.UserId]
+	DSModule.setData(DSTypes.DSName.TestedRank, player, testedRank)
+	testedPlayerRank[player.UserId] = nil
 end
 
 
 ---------- Calling / connecting functions ----------
 
 RankBindableFunction.OnInvoke = onRankInvoke
+
+local initialPlayers = Players:GetPlayers()
+task.defer(function()
+	for _, player in initialPlayers do
+		onPlayerAdded(player)
+	end
+end)
+Players.PlayerAdded:Connect(onPlayerAdded)
+
+Players.PlayerRemoving:Connect(onPlayerRemoving)

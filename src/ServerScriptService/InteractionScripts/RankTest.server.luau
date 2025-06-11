@@ -10,6 +10,11 @@ local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 
 
+---------- Imports ----------
+
+local LeaderstatsModule = require(ServerStorage.LeaderstatsModule)
+
+
 ---------- Instances ----------
 
 local RankTestFolder: Folder = workspace._Workspace.RankTest
@@ -113,7 +118,7 @@ local function displayRank(player: Player)
 	-- Get rank
 	local rank = "no data"
 	task.defer(function()
-		rank = RankBindableFunction:Invoke("GetPlayerRank", player)
+		rank = RankBindableFunction:Invoke("TestAndGetPlayerRank", player)
 	end)
 
 	---------- Wait for rank ----------
@@ -130,6 +135,9 @@ local function displayRank(player: Player)
 		end
 	end
 
+	-- Set leaderstats
+	LeaderstatsModule.setData(player, "Rank", "???")
+
 	-- Wait
 	while rank == "no data" or time() - startTime < transitionTime do
 		RunService.Heartbeat:Wait()
@@ -143,6 +151,9 @@ local function displayRank(player: Player)
 		end
 	end
 
+
+	-- Set leaderstats
+	LeaderstatsModule.setData(player, "Rank", rank)
 
 	-- Display rank on gui
 	displayBillboardGuiText(rank, 32)
