@@ -21,6 +21,8 @@ local RankTestFolder: Folder = workspace._Workspace.RankTest
 local RankTestInteraction: Folder = RankTestFolder.Interaction
 local RankTestInteractivePart: Part = RankTestInteraction.InteractivePart
 local RankTestProximityPrompt: ProximityPrompt = RankTestInteractivePart.ProximityPrompt
+local PoofAudioPlayer: AudioPlayer = RankTestInteractivePart.PoofAudioPlayer
+local PulsingAudioPlayer: AudioPlayer = RankTestInteractivePart.PulsingAudioPlayer
 
 local RankTestBillboardGui = Instance.new("BillboardGui")
 
@@ -161,6 +163,9 @@ local function displayRank(player: Player)
 	-- Set leaderstats
 	LeaderstatsModule.setData(player, "Rank", rank)
 
+	-- Play audio
+	PoofAudioPlayer:Play()
+
 	-- Display rank on gui
 	task.defer(function()
 		displayBillboardGuiText(rank, 32, RankTestInteractivePart)
@@ -199,3 +204,4 @@ end
 ---------- Calling / connecting functions ----------
 
 RankTestProximityPrompt.Triggered:Connect(onProximityPromptTriggered)
+PulsingAudioPlayer:Play()

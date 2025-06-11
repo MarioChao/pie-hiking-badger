@@ -81,6 +81,9 @@ local function initializeLeaderstats(initialStats: InitialStats)
 end
 
 local function setData(player: Player, statName: string, value: any)
+	if value == nil then
+		return
+	end
 	local stat = getStatInstance(player, statName)
 	local success, result = pcall(function()
 		stat.Value = value
