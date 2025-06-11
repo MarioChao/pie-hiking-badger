@@ -11,10 +11,11 @@ local RunService = game:GetService("RunService")
 
 ---------- Imports ----------
 
-local BadgeInfo = require(ReplicatedStorage.BadgeModules.BadgeInfo)
-local CachedBadgeCheck = require(ReplicatedStorage.BadgeModules.BadgeCheck.CachedBadgeCheck)
+local BadgeModules = ReplicatedStorage:WaitForChild("BadgeModules")
+local BadgeInfo = require(BadgeModules.BadgeInfo)
+local CachedBadgeCheck = require(BadgeModules.BadgeCheck.CachedBadgeCheck)
 
-local RankTresholds = require(ReplicatedStorage.RankThresholds)
+local RankTresholds = require(ReplicatedStorage:WaitForChild("RankThresholds"))
 
 type RankBadge = {
 	[string]: {
@@ -31,6 +32,7 @@ local GiveRankBadgeRemote = GiveRankBadgeEvents.GiveRankBadgeRemote
 
 local MenuEvents = ReplicatedStorage:WaitForChild("MenuEvents")
 local MenuRemote = MenuEvents.MenuRemote
+local GameInfoBindable = MenuEvents.GameInfoBindable
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -42,6 +44,10 @@ local PlayerGui = LocalPlayer.PlayerGui
 local Game_ScreenGui: ScreenGui = PlayerGui:WaitForChild("Game_ScreenGui")
 local Menu_TextButton: TextButton = Game_ScreenGui.Menu_TextButton
 
+
+local GameInfo_ScreenGui: ScreenGui = PlayerGui:WaitForChild("GameInfo_ScreenGui")
+
+
 local Menu_ScreenGui: ScreenGui = PlayerGui:WaitForChild("Menu_ScreenGui")
 local Menu_Frame: Frame = Menu_ScreenGui.Menu_Frame
 
@@ -50,7 +56,7 @@ local Subdocks_Frame: Frame = Menu_Frame.Subdocks_Frame
 
 local Challenges_Frame: Frame = Subdocks_Frame.Challenges_Frame
 local Badges_ScrollingFrame: ScrollingFrame = Challenges_Frame.Badges_ScrollingFrame
-local TemplateBadge_Frame: Frame = Badges_ScrollingFrame.TemplateBadge_Frame
+local TemplateBadge_FrameButton: TextButton = Badges_ScrollingFrame.TemplateBadge_FrameButton
 
 local Awards_Frame: Frame = Subdocks_Frame.Awards_Frame
 local Awards_ScrollingFrame: ScrollingFrame = Awards_Frame.Awards_ScrollingFrame
@@ -61,7 +67,9 @@ local TemplateAward_Frame: Frame = Awards_ScrollingFrame.TemplateAward_Frame
 
 local rankPriority = RankTresholds.rankPriority
 
-local rankAwardFrame: {[string]: Frame}
+local badgeIdInfo: {[number]: BadgeInfo.BadgeInfo} = {}
+
+local rankAwardFrame: {[string]: Frame} = {}
 
 local playerRank
 
@@ -120,57 +128,94 @@ end
 
 local function setUpBadgesScrollingFrame()
 	-- Get template attributes
-	local ownedColor: Color3 = TemplateBadge_Frame:GetAttribute("OwnedColor")
-	local unownedColor: Color3 = TemplateBadge_Frame:GetAttribute("UnownedColor")
+	local ownedColor: Color3 = TemplateBadge_FrameButton:GetAttribute("OwnedColor")
+	local unownedColor: Color3 = TemplateBadge_FrameButton:GetAttribute("UnownedColor")
 
 	-- Hide template
-	TemplateBadge_Frame.Visible = false
-
-	-- Initialize table
-	local uncachedBadgeIds: {number} = {}
+	TemplateBadge_FrameButton.Visible = false
 
 	-- Go through badges
 	for tier, badgeIds in RankTresholds.badgeTierIds do
 		repeat
+			-- Initialize table
+			local uncachedBadgeIds: {number} = {}
+
 			-- Check badges
 			local checkResult = CachedBadgeCheck.userHasBadges(LocalPlayer.UserId, badgeIds)
-			for _, badgeId in badgeIds do
+
+			-- Create badge frames
+			local badgeFrames: {TextButton} = {}
+			local count = 0
+			for _index, badgeId in badgeIds do
 				-- Check result available
 				if checkResult[badgeId] == nil then
 					table.insert(uncachedBadgeIds, badgeId)
+					count += 1
 					continue
 				end
 
-				-- Clone frame
-				local badgeFrame = TemplateBadge_Frame:Clone()
+				task.defer(function()
+					-- Get index
+					local index = _index
 
-				-- Get child instances
-				local icon_ImageLabel: ImageLabel = badgeFrame.Icon_ImageLabel
-				local details_Frame: Frame = badgeFrame.Details_Frame
-				local name_TextLabel: TextLabel = details_Frame.Name_TextLabel
-				local description_TextLabel: TextLabel = details_Frame.Description_TextLabel
-				local tier_TextLabel: TextLabel = details_Frame.Tier_TextLabel
+					-- Clone frame
+					local badgeFrame = TemplateBadge_FrameButton:Clone()
 
-				-- Get badge info
-				local badgeInfo = BadgeInfo.getBadgeInfo(badgeId)
-				if not badgeInfo then
-					print(`Failed to get badge info of badge {badgeId}!`)
+					-- Get child instances
+					local icon_ImageLabel: ImageLabel = badgeFrame.Icon_ImageLabel
+					local details_Frame: Frame = badgeFrame.Details_Frame
+					local name_TextLabel: TextLabel = details_Frame.Name_TextLabel
+					local description_TextLabel: TextLabel = details_Frame.Description_TextLabel
+					local tier_TextLabel: TextLabel = details_Frame.Tier_TextLabel
+
+					-- Get badge info
+					local badgeInfo = BadgeInfo.getBadgeInfo(badgeId)
+					if not badgeInfo then
+						print(`Failed to get badge info of badge {badgeId}!`)
+					end
+					badgeIdInfo[badgeId] = badgeInfo
+
+					-- Set badge info
+					icon_ImageLabel.Image = `rbxassetid://{badgeInfo.IconImageId}`
+					name_TextLabel.Text = badgeInfo.Name
+					description_TextLabel.Text = badgeInfo.Description
+					tier_TextLabel.Text = `Tier {tier}`
+
+					-- Set frame properties
+					if checkResult[badgeId] then
+						badgeFrame.BackgroundColor3 = ownedColor
+					elseif checkResult[badgeId] == false then
+						badgeFrame.BackgroundColor3 = unownedColor
+					end
+					badgeFrame.Name = `Badge_{badgeId}_Frame`
+					badgeFrame.Visible = true
+
+					-- Store badge frame
+					badgeFrames[index] = badgeFrame
+					count += 1
+				end)
+			end
+
+			-- Wait until all badges are looked through
+			while count < #badgeIds do
+				RunService.Heartbeat:Wait()
+			end
+
+			-- Go through badge frames
+			for index = 1, #badgeIds do
+				-- Validate badge frame
+				local badgeFrame = badgeFrames[index]
+				if not badgeFrame then
+					continue
 				end
 
-				-- Set badge info
-				icon_ImageLabel.Image = `rbxassetid://{badgeInfo.IconImageId}`
-				name_TextLabel.Text = badgeInfo.Name
-				description_TextLabel.Text = badgeInfo.Description
-				tier_TextLabel.Text = `Tier {tier}`
+				-- Set clicked connection
+				local badgeId = badgeIds[index]
+				badgeFrame.Activated:Connect(function()
+					GameInfoBindable:Fire("ShowBadgeInfo", badgeId, badgeIdInfo[badgeId])
+				end)
 
-				-- Set frame properties
-				if checkResult[badgeId] then
-					badgeFrame.BackgroundColor3 = ownedColor
-				elseif checkResult[badgeId] == false then
-					badgeFrame.BackgroundColor3 = unownedColor
-				end
-				badgeFrame.Name = `Badge_{badgeId}_Frame`
-				badgeFrame.Visible = true
+				-- Set parent
 				badgeFrame.Parent = Badges_ScrollingFrame
 			end
 
@@ -178,8 +223,7 @@ local function setUpBadgesScrollingFrame()
 			badgeIds = uncachedBadgeIds
 			if #uncachedBadgeIds > 0 then
 				print("Some badges not checked!")
-				print(uncachedBadgeIds)
-				RunService.Heartbeat:Wait()
+				task.wait(10)
 			end
 		until #uncachedBadgeIds == 0
 	end
@@ -222,6 +266,9 @@ local function setUpAwardsScrollingFrame()
 	end
 end
 
+
+---------- Event connected functions ----------
+
 local function onUpdateRank(newRank: string)
 	-- Store rank
 	playerRank = newRank
@@ -247,6 +294,9 @@ end
 
 local function onMenuActivated()
 	Menu_ScreenGui.Enabled = not Menu_ScreenGui.Enabled
+	if not Menu_ScreenGui.Enabled then
+		GameInfo_ScreenGui.Enabled = false
+	end
 end
 
 local function onMenuClientEvent(mode: string, ...)
@@ -259,6 +309,7 @@ end
 ---------- Set up functions ----------
 
 local function setUpMenu()
+	Game_ScreenGui.Enabled = true
 	Menu_ScreenGui.Enabled = false
 	showSubdock("Challenges")
 	task.defer(setUpMenuButtons)

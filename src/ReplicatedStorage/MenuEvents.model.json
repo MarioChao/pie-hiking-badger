@@ -4,6 +4,10 @@
 		{
 			"Name": "MenuRemote",
 			"ClassName": "RemoteEvent"
+		},
+		{
+			"Name": "GameInfoBindable",
+			"ClassName": "BindableEvent"
 		}
 	]
 }

@@ -14,7 +14,7 @@ local BadgeService = game:GetService("BadgeService")
 
 ---------- Types ----------
 
-type BadgeInfo = {
+export type BadgeInfo = {
 	Name: string,
 	Description: string,
 	IconImageId: number,

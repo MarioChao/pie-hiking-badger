@@ -32,6 +32,7 @@ type RankThreshold = {
 type RankThresholds = {
 	badgeTierInfos: {BadgeTierInfo},
 	badgeTierIds: {{number}},
+	badgePlaceId: {[string]: number},
 	rankThresholds: {RankThreshold},
 	rankPriority: {[string]: number},
 }
