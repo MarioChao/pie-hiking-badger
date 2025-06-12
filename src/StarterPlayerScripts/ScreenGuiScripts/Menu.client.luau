@@ -39,17 +39,12 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 
----------- GUI instances ----------
-
-local Game_ScreenGui: ScreenGui = PlayerGui:WaitForChild("Game_ScreenGui")
-local Menu_TextButton: TextButton = Game_ScreenGui.Menu_TextButton
-
-
-local GameInfo_ScreenGui: ScreenGui = PlayerGui:WaitForChild("GameInfo_ScreenGui")
-
+---------- Gui instances ----------
 
 local Menu_ScreenGui: ScreenGui = PlayerGui:WaitForChild("Menu_ScreenGui")
 local Menu_Frame: Frame = Menu_ScreenGui.Menu_Frame
+
+local Exit_ImageButton: ImageButton = Menu_Frame.Exit_ImageButton
 
 local Buttons_Frame: Frame = Menu_Frame.Buttons_Frame
 local Subdocks_Frame: Frame = Menu_Frame.Subdocks_Frame
@@ -212,7 +207,7 @@ local function setUpBadgesScrollingFrame()
 				-- Set clicked connection
 				local badgeId = badgeIds[index]
 				badgeFrame.Activated:Connect(function()
-					GameInfoBindable:Fire("ShowBadgeInfo", badgeId, badgeIdInfo[badgeId])
+					GameInfoBindable:Fire("ToggleShowBadgeInfo", badgeId, badgeIdInfo[badgeId])
 				end)
 
 				-- Set parent
@@ -292,13 +287,6 @@ end
 
 ---------- Event functions ----------
 
-local function onMenuActivated()
-	Menu_ScreenGui.Enabled = not Menu_ScreenGui.Enabled
-	if not Menu_ScreenGui.Enabled then
-		GameInfo_ScreenGui.Enabled = false
-	end
-end
-
 local function onMenuClientEvent(mode: string, ...)
 	if mode == "UpdateRank" then
 		onUpdateRank(...)
@@ -309,7 +297,6 @@ end
 ---------- Set up functions ----------
 
 local function setUpMenu()
-	Game_ScreenGui.Enabled = true
 	Menu_ScreenGui.Enabled = false
 	showSubdock("Challenges")
 	task.defer(setUpMenuButtons)
@@ -320,8 +307,10 @@ end
 
 ---------- Calling / connecting functions ----------
 
-Menu_TextButton.Activated:Connect(onMenuActivated)
-
 MenuRemote.OnClientEvent:Connect(onMenuClientEvent)
+
+Exit_ImageButton.Activated:Connect(function()
+	Menu_ScreenGui.Enabled = false
+end)
 
 setUpMenu()

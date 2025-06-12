@@ -29,7 +29,7 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer.PlayerGui
 
 
----------- GUI instances ----------
+---------- Gui instances ----------
 
 local GameInfo_ScreenGui: ScreenGui = PlayerGui:WaitForChild("GameInfo_ScreenGui")
 local GameInfo_UIScale: UIScale = GameInfo_ScreenGui.UIScale
@@ -46,12 +46,21 @@ local Exit_ImageButton: ImageButton = GameInfo_Frame.Exit_ImageButton
 
 local badgePlaceId = RankThresholds.badgePlaceId
 
+local cachedPlaceIdName: {[number]: string} = {}
+
 local targetPlaceId = 0
+
+local displayedBadgeId = nil
 
 
 ---------- Helper functions ----------
 
 local function getPlaceName(placeId: number)
+	-- Check cached
+	if cachedPlaceIdName[placeId] then
+		return cachedPlaceIdName[placeId]
+	end
+
 	-- Get product info
 	local success, result = pcall(function()
 		return MarketplaceService:GetProductInfo(placeId)
@@ -63,6 +72,9 @@ local function getPlaceName(placeId: number)
 		return nil
 	end
 
+	-- Cache result
+	cachedPlaceIdName[placeId] = result.Name
+
 	-- Return place name
 	return result.Name
 end
@@ -70,7 +82,7 @@ end
 
 ---------- Local functions ----------
 
-local function onShowBadgeInfo(badgeId: number, badgeInfo: BadgeInfo.BadgeInfo)
+local function showBadgeInfo(badgeId: number, badgeInfo: BadgeInfo.BadgeInfo)
 	-- Get place id
 	local placeId = badgePlaceId[tostring(badgeId)]
 	targetPlaceId = placeId
@@ -90,12 +102,28 @@ local function onShowBadgeInfo(badgeId: number, badgeInfo: BadgeInfo.BadgeInfo)
 	GameInfo_ScreenGui.Enabled = true
 end
 
+local function onToggleShowBadgeInfo(badgeId: number, badgeInfo: BadgeInfo.BadgeInfo)
+	-- Check if badge id already displayed
+	if GameInfo_ScreenGui.Enabled and badgeId == displayedBadgeId then
+		-- Hide badge info
+		displayedBadgeId = nil
+		GameInfo_ScreenGui.Enabled = false
+		return
+	end
+
+	-- Show badge info
+	showBadgeInfo(badgeId, badgeInfo)
+
+	-- Store displayed badge id
+	displayedBadgeId = badgeId
+end
+
 
 ---------- Event functions ----------
 
 local function onGameInfoEvent(mode: string, ...)
-	if mode == "ShowBadgeInfo" then
-		onShowBadgeInfo(...)
+	if mode == "ToggleShowBadgeInfo" then
+		onToggleShowBadgeInfo(...)
 	end
 end
 
