@@ -83,7 +83,7 @@ local function onShowBadgeInfo(badgeId: number, badgeInfo: BadgeInfo.BadgeInfo)
 
 	-- Set game info
 	PlaceName_TextLabel.Text = placeName
-	Thumbnail_ImageLabel.Image = `rbxthumb://type=GameThumbnail&id={placeId}&w=256&h=144`
+	Thumbnail_ImageLabel.Image = `rbxthumb://type=GameThumbnail&id={placeId}&w=768&h=432`
 	BadgeName_TextLabel.Text = badgeInfo.Name
 
 	-- Show game info

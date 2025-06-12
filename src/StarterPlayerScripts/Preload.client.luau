@@ -27,7 +27,7 @@ local function preloadPlaceThumbnails()
 	local assets = {}
 	for placeId, _ in placeIdHashTable do
 		local imageLabel = Instance.new("ImageLabel")
-		imageLabel.Image = `rbxthumb://type=GameThumbnail&id={placeId}&w=256&h=144`
+		imageLabel.Image = `rbxthumb://type=GameThumbnail&id={placeId}&w=768&h=432`
 		table.insert(assets, imageLabel)
 	end
 	ContentProvider:PreloadAsync(assets)
