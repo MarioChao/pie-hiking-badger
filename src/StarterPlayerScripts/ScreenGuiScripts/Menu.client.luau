@@ -62,6 +62,10 @@ local Stats_Frame: Frame = Subdocks_Frame.Stats_Frame
 local Stats_ScrollingFrame: ScrollingFrame = Stats_Frame.Stats_ScrollingFrame
 local TemplateStat_Frame: Frame = Stats_ScrollingFrame.TemplateStat_Frame
 
+local RanksInfo_Frame: Frame = Subdocks_Frame.RanksInfo_Frame
+local RanksInfo_ScrollingFrame: ScrollingFrame = RanksInfo_Frame.RanksInfo_ScrollingFrame
+local TemplateRankInfo_Frame: Frame = RanksInfo_ScrollingFrame.TemplateRankInfo_Frame
+
 
 ---------- Variables ----------
 
@@ -315,7 +319,10 @@ local function setUpStatsScrollingFrame()
 		title_TextLabel.Text = `Tier {tier}`
 		task.defer(function()
 			while true do
-				info_TextLabel.Text = `{tierOwnedBadgesCount[tier] or 0}/{#badgeIds}`
+				local ownedCount = tierOwnedBadgesCount[tier] or 0
+				local infoText = `{ownedCount}/{#badgeIds}`
+				infoText ..= ` ({math.round(ownedCount / #badgeIds * 100)}%)`
+				info_TextLabel.Text = infoText
 				task.wait(1)
 			end
 		end)
@@ -324,6 +331,57 @@ local function setUpStatsScrollingFrame()
 		statFrame.Name = `Stat_{tier}_Frame`
 		statFrame.Visible = true
 		statFrame.Parent = Stats_ScrollingFrame
+	end
+end
+
+local function setUpRanksInfoScrollingFrame()
+	-- Hide template
+	TemplateRankInfo_Frame.Visible = false
+
+	-- Go through ranks
+	for index = #RankTresholds.rankThresholds, 1, -1 do
+		-- Get rank
+		local rankThresholdsInfo = RankTresholds.rankThresholds[index]
+		local rank = rankThresholdsInfo.rankTitle
+
+		-- Clone frame
+		local rankInfoFrame = TemplateRankInfo_Frame:Clone()
+
+		-- Get child instances
+		local rankTitle_TextLabel: TextLabel = rankInfoFrame.RankTitle_TextLabel
+		local info_TextLabel: TextLabel = rankInfoFrame.Info_TextLabel
+
+		-- Set info
+		rankTitle_TextLabel.Text = `{rank}`
+		task.defer(function()
+			while true do
+				local infoText = ""
+				for conditionIndex = #rankThresholdsInfo.conditions, 1, -1 do
+					-- Newline between each tier
+					if infoText ~= "" then
+						infoText ..= "\n"
+					end
+
+					-- Store condition info
+					local conditionInfo = rankThresholdsInfo.conditions[conditionIndex]
+					local tier = conditionInfo.badgeTier
+					local minimumBadges = conditionInfo.minimumBadges
+					local ownedCount = math.min(tierOwnedBadgesCount[tier] or 0, minimumBadges)
+					infoText ..= `Tier {tier} - `
+					infoText ..= `{ownedCount}/{minimumBadges}`
+				end
+				if infoText == "" then
+					infoText = "None"
+				end
+				info_TextLabel.Text = infoText
+				task.wait(1)
+			end
+		end)
+
+		-- Set frame properties
+		rankInfoFrame.Name = `RankInfo_{index}_Frame`
+		rankInfoFrame.Visible = true
+		rankInfoFrame.Parent = RanksInfo_ScrollingFrame
 	end
 end
 
@@ -370,6 +428,7 @@ local function setUpMenu()
 	task.defer(setUpBadgesScrollingFrame)
 	task.defer(setUpAwardsScrollingFrame)
 	task.defer(setUpStatsScrollingFrame)
+	task.defer(setUpRanksInfoScrollingFrame)
 end
 
 

@@ -7,7 +7,6 @@
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local TeleportService = game:GetService("TeleportService")
 
 
@@ -32,7 +31,6 @@ local PlayerGui = LocalPlayer.PlayerGui
 ---------- Gui instances ----------
 
 local GameInfo_ScreenGui: ScreenGui = PlayerGui:WaitForChild("GameInfo_ScreenGui")
-local GameInfo_UIScale: UIScale = GameInfo_ScreenGui.UIScale
 
 local GameInfo_Frame: Frame = GameInfo_ScreenGui.GameInfo_Frame
 local PlaceName_TextLabel: TextLabel = GameInfo_Frame.PlaceName_TextLabel
@@ -145,12 +143,6 @@ end)
 
 Exit_ImageButton.Activated:Connect(function()
 	GameInfo_ScreenGui.Enabled = false
-end)
-
-RunService.Heartbeat:Connect(function()
-	-- Scale ui
-	local scale = GameInfo_ScreenGui.AbsoluteSize.Y / 320
-	GameInfo_UIScale.Scale = scale
 end)
 
 setUpGameInfo()
