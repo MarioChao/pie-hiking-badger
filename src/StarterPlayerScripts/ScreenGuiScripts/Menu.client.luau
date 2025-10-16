@@ -103,7 +103,20 @@ local function setButtonClaimable(textButton: TextButton, canClaim: boolean)
 	end
 end
 
+local function checkAllBadges(player: Player)
+	local allBadgeIds = {}
+	for _, badgeIds in RankTresholds.badgeTierIds do
+		for _, badgeId in badgeIds do
+			table.insert(allBadgeIds, badgeId)
+		end
+	end
+	CachedBadgeCheck.userHasBadges(player.UserId, allBadgeIds)
+end
+
 local function checkBadges()
+	-- Check all badges
+	checkAllBadges(LocalPlayer)
+
 	-- Go through badges
 	for tier, badgeIds in RankTresholds.badgeTierIds do
 		repeat

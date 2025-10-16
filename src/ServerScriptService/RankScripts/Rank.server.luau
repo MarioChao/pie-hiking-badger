@@ -41,6 +41,16 @@ local testedPlayerRank: {[number]: number} = {}
 
 ---------- Local functions ----------
 
+local function checkAllBadges(player: Player)
+	local allBadgeIds = {}
+	for _, badgeIds in badgeTierIds do
+		for _, badgeId in badgeIds do
+			table.insert(allBadgeIds, badgeId)
+		end
+	end
+	BadgeBindableFunction:Invoke("CheckPlayerBadges", player, allBadgeIds)
+end
+
 local function countBadges(player: Player, badgeIds: {number})
 	local checkResult = BadgeBindableFunction:Invoke("CheckPlayerBadges", player, badgeIds)
 	local count = 0
@@ -53,6 +63,10 @@ local function countBadges(player: Player, badgeIds: {number})
 end
 
 local function getRank_fromBadges(player: Player)
+	-- Check all badges
+	checkAllBadges(player)
+
+	-- Check rank badges
 	for _, rankThreshold in rankThresholds do
 		-- Check conditions
 		local conditionMet = true
