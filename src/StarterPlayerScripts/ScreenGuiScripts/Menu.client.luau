@@ -1,4 +1,5 @@
 --!strict
+
 -- Menu Script
 
 
@@ -11,9 +12,8 @@ local RunService = game:GetService("RunService")
 
 ---------- Imports ----------
 
-local BadgeModules = ReplicatedStorage:WaitForChild("BadgeModules")
-local BadgeInfo = require(BadgeModules.BadgeInfo)
-local CachedBadgeCheck = require(BadgeModules.BadgeCheck.CachedBadgeCheck)
+local _Modules = ReplicatedStorage:WaitForChild("Modules")
+local BadgeUtil = require(_Modules:WaitForChild("BadgeUtil"))
 
 local RankTresholds = require(ReplicatedStorage:WaitForChild("RankThresholds"))
 
@@ -42,29 +42,29 @@ local PlayerGui = LocalPlayer.PlayerGui
 ---------- Gui instances ----------
 
 local Menu_ScreenGui: ScreenGui = PlayerGui:WaitForChild("Menu_ScreenGui")
-local Menu_Frame: Frame = Menu_ScreenGui.Menu_Frame
+local Menu_Frame: Frame = Menu_ScreenGui:WaitForChild("Menu_Frame") :: Frame
 
-local Exit_ImageButton: ImageButton = Menu_Frame.Exit_ImageButton
+local Exit_ImageButton: ImageButton = Menu_Frame:WaitForChild("Exit_ImageButton") :: ImageButton
 
-local Buttons_Frame: Frame = Menu_Frame.Buttons_Frame
-local Buttons_ScrollingFrame: Frame = Buttons_Frame.Buttons_ScrollingFrame
-local Subdocks_Frame: Frame = Menu_Frame.Subdocks_Frame
+local Buttons_Frame: Frame = Menu_Frame:WaitForChild("Buttons_Frame") :: Frame
+local Buttons_ScrollingFrame: Frame = Buttons_Frame:WaitForChild("Buttons_ScrollingFrame") :: Frame
+local Subdocks_Frame: Frame = Menu_Frame:WaitForChild("Subdocks_Frame") :: Frame
 
-local Challenges_Frame: Frame = Subdocks_Frame.Challenges_Frame
-local Badges_ScrollingFrame: ScrollingFrame = Challenges_Frame.Badges_ScrollingFrame
-local TemplateBadge_FrameButton: TextButton = Badges_ScrollingFrame.TemplateBadge_FrameButton
+local Challenges_Frame: Frame = Subdocks_Frame:WaitForChild("Challenges_Frame") :: Frame
+local Badges_ScrollingFrame: ScrollingFrame = Challenges_Frame:WaitForChild("Badges_ScrollingFrame") :: ScrollingFrame
+local TemplateBadge_FrameButton: TextButton = Badges_ScrollingFrame:WaitForChild("TemplateBadge_FrameButton") :: TextButton
 
-local Awards_Frame: Frame = Subdocks_Frame.Awards_Frame
-local Awards_ScrollingFrame: ScrollingFrame = Awards_Frame.Awards_ScrollingFrame
-local TemplateAward_Frame: Frame = Awards_ScrollingFrame.TemplateAward_Frame
+local Awards_Frame: Frame = Subdocks_Frame:WaitForChild("Awards_Frame") :: Frame
+local Awards_ScrollingFrame: ScrollingFrame = Awards_Frame:WaitForChild("Awards_ScrollingFrame") :: ScrollingFrame
+local TemplateAward_Frame: Frame = Awards_ScrollingFrame:WaitForChild("TemplateAward_Frame") :: Frame
 
-local Stats_Frame: Frame = Subdocks_Frame.Stats_Frame
-local Stats_ScrollingFrame: ScrollingFrame = Stats_Frame.Stats_ScrollingFrame
-local TemplateStat_Frame: Frame = Stats_ScrollingFrame.TemplateStat_Frame
+local Stats_Frame: Frame = Subdocks_Frame:WaitForChild("Stats_Frame") :: Frame
+local Stats_ScrollingFrame: ScrollingFrame = Stats_Frame:WaitForChild("Stats_ScrollingFrame") :: ScrollingFrame
+local TemplateStat_Frame: Frame = Stats_ScrollingFrame:WaitForChild("TemplateStat_Frame") :: Frame
 
-local RanksInfo_Frame: Frame = Subdocks_Frame.RanksInfo_Frame
-local RanksInfo_ScrollingFrame: ScrollingFrame = RanksInfo_Frame.RanksInfo_ScrollingFrame
-local TemplateRankInfo_Frame: Frame = RanksInfo_ScrollingFrame.TemplateRankInfo_Frame
+local RanksInfo_Frame: Frame = Subdocks_Frame:WaitForChild("RanksInfo_Frame") :: Frame
+local RanksInfo_ScrollingFrame: ScrollingFrame = RanksInfo_Frame:WaitForChild("RanksInfo_ScrollingFrame") :: ScrollingFrame
+local TemplateRankInfo_Frame: Frame = RanksInfo_ScrollingFrame:WaitForChild("TemplateRankInfo_Frame") :: Frame
 
 
 ---------- Variables ----------
@@ -72,7 +72,7 @@ local TemplateRankInfo_Frame: Frame = RanksInfo_ScrollingFrame.TemplateRankInfo_
 local rankPriority = RankTresholds.rankPriority
 
 local badgeIdOwned: {[number]: boolean} = {}
-local badgeIdInfo: {[number]: BadgeInfo.BadgeInfo} = {}
+local badgeIdInfo: {[number]: BadgeUtil.BadgeInfo} = {}
 
 local tierOwnedBadgesCount: {number} = {}
 
@@ -110,7 +110,7 @@ local function checkAllBadges(player: Player)
 			table.insert(allBadgeIds, badgeId)
 		end
 	end
-	CachedBadgeCheck.userHasBadges(player.UserId, allBadgeIds)
+	BadgeUtil.CachedBadgeCheck.checkUserHasBadges(player.UserId, allBadgeIds)
 end
 
 local function checkBadges()
@@ -124,7 +124,7 @@ local function checkBadges()
 			local uncachedBadgeIds: {number} = {}
 
 			-- Check badges
-			local checkResult = CachedBadgeCheck.userHasBadges(LocalPlayer.UserId, badgeIds)
+			local checkResult = BadgeUtil.CachedBadgeCheck.checkUserHasBadges(LocalPlayer.UserId, badgeIds)
 
 			-- Check results
 			for _, badgeId in badgeIds do
@@ -135,7 +135,7 @@ local function checkBadges()
 				end
 
 				-- Set owned
-				badgeIdOwned[badgeId] = checkResult[badgeId]
+				badgeIdOwned[badgeId] = checkResult[badgeId] :: boolean
 
 				-- Increment badges count
 				if checkResult[badgeId] then
@@ -161,10 +161,12 @@ end
 
 local function showSubdock(subdockName: string)
 	for _, frame in Subdocks_Frame:GetChildren() do
-		frame.Visible = false
+		if frame:IsA("Frame") then
+			frame.Visible = false
+		end
 	end
 	local subdock = Subdocks_Frame:FindFirstChild(`{subdockName}_Frame`)
-	if subdock then
+	if subdock and subdock:IsA("Frame") then
 		subdock.Visible = true
 	end
 end
@@ -208,14 +210,14 @@ local function setUpBadgesScrollingFrame()
 				local badgeFrame = TemplateBadge_FrameButton:Clone()
 
 				-- Get child instances
-				local icon_ImageLabel: ImageLabel = badgeFrame.Icon_ImageLabel
-				local details_Frame: Frame = badgeFrame.Details_Frame
-				local name_TextLabel: TextLabel = details_Frame.Name_TextLabel
-				local description_TextLabel: TextLabel = details_Frame.Description_TextLabel
-				local tier_TextLabel: TextLabel = details_Frame.Tier_TextLabel
+				local icon_ImageLabel: ImageLabel = badgeFrame:FindFirstChild("Icon_ImageLabel") :: ImageLabel
+				local details_Frame: Frame = badgeFrame:FindFirstChild("Details_Frame") :: Frame
+				local name_TextLabel: TextLabel = details_Frame:FindFirstChild("Name_TextLabel") :: TextLabel
+				local description_TextLabel: TextLabel = details_Frame:FindFirstChild("Description_TextLabel") :: TextLabel
+				local tier_TextLabel: TextLabel = details_Frame:FindFirstChild("Tier_TextLabel") :: TextLabel
 
 				-- Get badge info
-				local badgeInfo = BadgeInfo.getBadgeInfo(badgeId)
+				local badgeInfo = BadgeUtil.BadgeInfo.getBadgeInfo(badgeId)
 				if not badgeInfo then
 					print(`Failed to get badge info of badge {badgeId}!`)
 				end
@@ -289,8 +291,8 @@ local function setUpAwardsScrollingFrame()
 		rankAwardFrame[rank] = awardFrame
 
 		-- Get child instances
-		local claim_TextButton: TextButton = awardFrame.Claim_TextButton
-		local title_TextLabel: TextLabel = awardFrame.Title_TextLabel
+		local claim_TextButton: TextButton = awardFrame:FindFirstChild("Claim_TextButton") :: TextButton
+		local title_TextLabel: TextLabel = awardFrame:FindFirstChild("Title_TextLabel") :: TextLabel
 
 		-- Set award info
 		title_TextLabel.Text = `Reach {rank} rank.`
@@ -324,9 +326,9 @@ local function setUpStatsScrollingFrame()
 		local statFrame = TemplateStat_Frame:Clone()
 
 		-- Get child instances
-		local title_TextLabel: TextLabel = statFrame.Title_TextLabel
-		local info_Frame: Frame = statFrame.Info_Frame
-		local info_TextLabel: TextLabel = info_Frame.Info_TextLabel
+		local title_TextLabel: TextLabel = statFrame:FindFirstChild("Title_TextLabel") :: TextLabel
+		local info_Frame: Frame = statFrame:FindFirstChild("Info_Frame") :: Frame
+		local info_TextLabel: TextLabel = info_Frame:FindFirstChild("Info_TextLabel") :: TextLabel
 
 		-- Set stat info
 		title_TextLabel.Text = `Tier {tier}`
@@ -361,8 +363,8 @@ local function setUpRanksInfoScrollingFrame()
 		local rankInfoFrame = TemplateRankInfo_Frame:Clone()
 
 		-- Get child instances
-		local rankTitle_TextLabel: TextLabel = rankInfoFrame.RankTitle_TextLabel
-		local info_TextLabel: TextLabel = rankInfoFrame.Info_TextLabel
+		local rankTitle_TextLabel: TextLabel = rankInfoFrame:FindFirstChild("RankTitle_TextLabel") :: TextLabel
+		local info_TextLabel: TextLabel = rankInfoFrame:FindFirstChild("Info_TextLabel") :: TextLabel
 
 		-- Set info
 		rankTitle_TextLabel.Text = `{rank}`
@@ -416,7 +418,7 @@ local function onUpdateRank(newRank: string)
 		local isRankReached = getIsRankReached(rank)
 
 		-- Modify gui
-		local claim_TextButton: TextButton = awardFrame.Claim_TextButton
+		local claim_TextButton: TextButton = awardFrame:FindFirstChild("Claim_TextButton") :: TextButton
 		setButtonClaimable(claim_TextButton, isRankReached)
 	end
 end

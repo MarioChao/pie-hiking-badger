@@ -1,0 +1,8 @@
+[package]
+name = "mariochao/pie-hiking-badger"
+version = "0.0.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+BadgeUtil = "mariochao/badge-util@^0.0.2"

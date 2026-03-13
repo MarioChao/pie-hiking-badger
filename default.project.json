@@ -5,7 +5,12 @@
 
     "ReplicatedStorage": {
       "$path": "src/ReplicatedStorage",
-      "$ignoreUnknownInstances": true
+      "$ignoreUnknownInstances": true,
+
+      "Modules": {
+        "$path": "Packages",
+        "$ignoreUnknownInstances": true
+      }
     },
 
     "ServerScriptService": {
@@ -24,5 +29,6 @@
         "$ignoreUnknownInstances": true
       }
     }
-  }
+  },
+  "globIgnorePaths": ["**/wally.toml"]
 }

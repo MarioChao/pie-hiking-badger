@@ -14,8 +14,13 @@ local TeleportService = game:GetService("TeleportService")
 
 local RankThresholds = require(ReplicatedStorage:WaitForChild("RankThresholds"))
 
-local BadgeModules = ReplicatedStorage:WaitForChild("BadgeModules")
-local BadgeInfo = require(BadgeModules.BadgeInfo)
+local _Modules = ReplicatedStorage:WaitForChild("Modules")
+local BadgeUtil = require(_Modules:WaitForChild("BadgeUtil"))
+
+
+---------- Types ----------
+
+type InstanceLike = Instance & {[string]: Instance}
 
 
 ---------- Instances ----------
@@ -32,12 +37,12 @@ local PlayerGui = LocalPlayer.PlayerGui
 
 local GameInfo_ScreenGui: ScreenGui = PlayerGui:WaitForChild("GameInfo_ScreenGui")
 
-local GameInfo_Frame: Frame = GameInfo_ScreenGui.GameInfo_Frame
-local PlaceName_TextLabel: TextLabel = GameInfo_Frame.PlaceName_TextLabel
-local Thumbnail_ImageLabel: ImageLabel = GameInfo_Frame.Thumbnail_ImageLabel
-local BadgeName_TextLabel: TextLabel = GameInfo_Frame.BadgeName_TextLabel
-local Play_TextButton: TextButton = GameInfo_Frame.Play_TextButton
-local Exit_ImageButton: ImageButton = GameInfo_Frame.Exit_ImageButton
+local GameInfo_Frame: Frame = GameInfo_ScreenGui:WaitForChild("GameInfo_Frame") :: Frame
+local PlaceName_TextLabel: TextLabel = GameInfo_Frame:WaitForChild("PlaceName_TextLabel") :: TextLabel
+local Thumbnail_ImageLabel: ImageLabel = GameInfo_Frame:WaitForChild("Thumbnail_ImageLabel") :: ImageLabel
+local BadgeName_TextLabel: TextLabel = GameInfo_Frame:WaitForChild("BadgeName_TextLabel") :: TextLabel
+local Play_TextButton: TextButton = GameInfo_Frame:WaitForChild("Play_TextButton") :: TextButton
+local Exit_ImageButton: ImageButton = GameInfo_Frame:WaitForChild("Exit_ImageButton") :: ImageButton
 
 
 ---------- Variables ----------
@@ -48,12 +53,12 @@ local cachedPlaceIdName: {[number]: string} = {}
 
 local targetPlaceId = 0
 
-local displayedBadgeId = nil
+local displayedBadgeId = nil :: number?
 
 
 ---------- Helper functions ----------
 
-local function getPlaceName(placeId: number)
+local function getPlaceName(placeId: number): string?
 	-- Check cached
 	if cachedPlaceIdName[placeId] then
 		return cachedPlaceIdName[placeId]
@@ -80,7 +85,7 @@ end
 
 ---------- Local functions ----------
 
-local function showBadgeInfo(badgeId: number, badgeInfo: BadgeInfo.BadgeInfo)
+local function showBadgeInfo(badgeId: number, badgeInfo: BadgeUtil.BadgeInfo)
 	-- Get place id
 	local placeId = badgePlaceId[tostring(badgeId)]
 	targetPlaceId = placeId
@@ -100,7 +105,7 @@ local function showBadgeInfo(badgeId: number, badgeInfo: BadgeInfo.BadgeInfo)
 	GameInfo_ScreenGui.Enabled = true
 end
 
-local function onToggleShowBadgeInfo(badgeId: number, badgeInfo: BadgeInfo.BadgeInfo)
+local function onToggleShowBadgeInfo(badgeId: number, badgeInfo: BadgeUtil.BadgeInfo)
 	-- Check if badge id already displayed
 	if GameInfo_ScreenGui.Enabled and badgeId == displayedBadgeId then
 		-- Hide badge info

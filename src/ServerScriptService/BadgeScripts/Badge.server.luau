@@ -10,9 +10,8 @@ local ServerStorage = script.Parent.Parent.Parent:FindFirstChild("ServerStorage"
 
 ---------- Imports ----------
 
-local BadgeScripts = script.Parent
-local BadgeAward = require(BadgeScripts.BadgeAward)
-local CachedBadgeCheck = require(ReplicatedStorage.BadgeModules.BadgeCheck.CachedBadgeCheck)
+local _Modules = ReplicatedStorage:WaitForChild("Modules")
+local BadgeUtil = require(_Modules:WaitForChild("BadgeUtil"))
 
 
 ---------- Instances ----------
@@ -25,11 +24,11 @@ local BadgeBindableFunction = BadgeEvents.BadgeBindableFunction
 ---------- Local functions ----------
 
 local function onAwardBadge(player: Player, badgeId: number, badgeName: string)
-	BadgeAward.resolveAwardBadge(player, badgeId, badgeName)
+	BadgeUtil.awardBadgeLoop(player, badgeId, badgeName)
 end
 
 local function onCheckPlayerBadges(player: Player, badgeIds: {number})
-	return CachedBadgeCheck.userHasBadges(player.UserId, badgeIds)
+	return BadgeUtil.CachedBadgeCheck.checkUserHasBadges(player.UserId, badgeIds)
 end
 
 local function onCheckPlayerBadge(player: Player, badgeId: number)
@@ -51,6 +50,7 @@ local function onBadgeInvoke(mode: string, ...)
 	elseif mode == "CheckPlayerBadge" then
 		return onCheckPlayerBadge(...)
 	end
+	return {}
 end
 
 

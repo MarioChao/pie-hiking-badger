@@ -38,12 +38,12 @@ local RankBindableFunction = RankEvents.RankBindableFunction
 
 local rankPriority = RankThresholds.rankPriority
 
-local userIdThrottleTable: {[number]: boolean} = {}
+local userRankString_throttled = {} :: {[string]: true?}
 
 
 ---------- Helper functions ----------
 
-local function throttle<K>(sourceTable: {[K]: boolean}, key: K, delay_seconds: number): boolean
+local function throttle<K>(sourceTable: {[K]: boolean?}, key: K, delay_seconds: number): boolean
 	-- Check if throttled
 	if sourceTable[key] then
 		return false
@@ -62,7 +62,7 @@ end
 
 local function onGiveBadgeWithRank(player: Player, rank: string)
 	-- Throttle
-	local throttleSuccess = throttle(userIdThrottleTable, player.UserId, 1)
+	local throttleSuccess = throttle(userRankString_throttled, `{player.UserId}_{rank}`, 1)
 	if not throttleSuccess then
 		return
 	end
