@@ -8,7 +8,7 @@ local RunService = game:GetService("RunService")
 
 if RunService:IsClient() then
 	local RankThreshold_RemoteFunction = script:WaitForChild("RankThreshold_RemoteFunction")
-	return RankThreshold_RemoteFunction:InvokeServer("Get Rank Thresholds")
+	return RankThreshold_RemoteFunction:InvokeServer("Get Rank Thresholds") :: RankThresholds
 end
 
 

@@ -10,4 +10,5 @@ sourcemap.json
 
 # Wally package files
 /Packages
+/ServerPackages
 wally.lock

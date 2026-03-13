@@ -6,3 +6,6 @@ realm = "shared"
 
 [dependencies]
 BadgeUtil = "mariochao/badge-util@^0.0.2"
+
+[server-dependencies]
+DataStoreReader = "mariochao/data-store-reader@0.0.1"
