@@ -23,13 +23,6 @@ local DataStoreReader = require(_ServerModules:WaitForChild("DataStoreReader"))
 
 local Constants = {}
 
-Constants.memoryStoreHashMap = MemoryStoreService:GetHashMap("UserId_PlayerName")
-Constants.memoryStoreStates = {
-    waitForData = "_WaitForData",
-}
-Constants.memoryStoreRetryTime = 2
-Constants.memoryStoreFetchTime = 32
-
 Constants.hikerInfoFolder = workspace:WaitForChild("_Workspace"):WaitForChild("HikerInfo") :: Folder
 
 Constants.avatarImageLabelName = "Avatar_ImageLabel"
@@ -101,11 +94,6 @@ Globals.key_thread = {} :: {[string]: thread?}
 ---------- Local functions ----------
 
 local getSecondsUntilNextHour
-local waitAndGetValueFromMemoryStoreHashMap
-local setMemoryStoreValue
-
-local getPlayerNameFromUserId_raw
-local cached_getPlayerNameFromUserId
 
 local clearHikerHall
 local updateHikerHall
@@ -113,92 +101,11 @@ local resolveUserRank
 local refreshHikerHall
 
 
------ Memory store -----
+----- Time -----
 
 getSecondsUntilNextHour = function()
     local unixTimestamp = DateTime.now().UnixTimestamp
     return 3600 - unixTimestamp % 3600
-end
-
-waitAndGetValueFromMemoryStoreHashMap = function(memoryStoreHashMap: MemoryStoreHashMap, key: string)
-    local success, pcallResult
-    while true do
-        success, pcallResult = pcall(function()
-            return memoryStoreHashMap:GetAsync(key)
-        end)
-        local isWaiting = false
-        if success and pcallResult then
-            isWaiting = (pcallResult == Constants.memoryStoreStates.waitForData)
-        end
-        if not (success and (not isWaiting)) then
-            task.wait(Constants.memoryStoreRetryTime)
-        else
-            break
-        end
-    end
-    return success, pcallResult
-end
-
-setMemoryStoreValue = function(memoryStoreHashMap: MemoryStoreHashMap, key: string, value: any, expirationTimeFn: () -> number)
-    local success
-    repeat
-        success = pcall(function()
-            memoryStoreHashMap:SetAsync(key, value, expirationTimeFn())
-        end)
-        if not success then
-            task.wait(Constants.memoryStoreRetryTime)
-        end
-    until success
-end
-
-
------ Get player name -----
-
-getPlayerNameFromUserId_raw = function(userId: number)
-    local success, result
-    repeat
-        success, result = pcall(function()
-            return Players:GetNameFromUserIdAsync(userId)
-        end)
-        if not success then
-            task.wait(5)
-        end
-    until success
-    return result
-end
-
-cached_getPlayerNameFromUserId = function(userId: number)
-    local memoryStoreHashMap = Constants.memoryStoreHashMap
-    local key = `User_{userId}`
-    local result
-
-    -- Get from memory store
-    local success, pcallResult = waitAndGetValueFromMemoryStoreHashMap(memoryStoreHashMap, key)
-
-    -- Check memory store or get from data store
-    if success and pcallResult then
-        result = pcallResult
-    end
-
-    -- If invalid, get from data store
-    if not (success and result) then
-        setMemoryStoreValue(
-            memoryStoreHashMap,
-            key, Constants.memoryStoreStates.waitForData, function() return Constants.memoryStoreFetchTime end
-        )
-        success, result = pcall(function()
-            return getPlayerNameFromUserId_raw(userId)
-        end)
-        if success then
-            setMemoryStoreValue(
-                memoryStoreHashMap,
-                key, result, getSecondsUntilNextHour
-            )
-        end
-    end
-
-    -- Return result
-    return success, result
 end
 
 
@@ -224,17 +131,20 @@ clearHikerHall = function()
 end
 
 updateHikerHall = function()
-    local data = Globals.dataStoreReader:getCurrentData() :: {[string]: string}
-    for key, value in data do
-        local userId = tonumber(string.match(key, "%d+"))
-        local rank = tostring(value)
-        if userId and value then
-            resolveUserRank(userId, rank)
+    local data = Globals.dataStoreReader:getCurrentData() :: {[string]: {[string]: {rank: string, username: string}}}
+    for _, userInfoMap in data do
+        for key, userInfo in userInfoMap do
+            local userId = tonumber(string.match(key, "%d+"))
+            local rank = userInfo.rank
+            local username = userInfo.username
+            if userId and rank then
+                resolveUserRank(userId, rank, username)
+            end
         end
     end
 end
 
-resolveUserRank = function(userId: number, rank: string)
+resolveUserRank = function(userId: number, rank: string, username: string)
     if Globals.userId_displayed[userId] then
         return
     end
@@ -248,13 +158,7 @@ resolveUserRank = function(userId: number, rank: string)
 
     -- Fill in entry information
     avatar_imageLabel.Image = `rbxthumb://type=AvatarBust&id={userId}&w=100&h=100`
-    local success, playerName
-    repeat
-        success, playerName = cached_getPlayerNameFromUserId(userId)
-        if not success then
-            task.wait()
-        end
-    until success
+    local playerName = username
     name_textLabel.Text = playerName
     Globals.rank_count[rank] = (Globals.rank_count[rank] or 0) + 1
     screenUis.title_textLabel.Text = `{rank} Hikers ({Globals.rank_count[rank]})`
@@ -280,7 +184,7 @@ refreshHikerHall = function()
     Globals.key_thread[threadKey] = task.defer(function()
         -- Read data
         task.defer(function()
-            Globals.dataStoreReader:readDataStore("TestedRank")
+            Globals.dataStoreReader:readDataStore("CombinedUserInfo")
         end)
         clearHikerHall()
 
@@ -309,14 +213,23 @@ refreshHikerHall = function()
             Constants.loadingUis.loading_textLabel.Text = `{prefix} ({loadedCount}/{keySize})`
             task.wait()
         end
+        print(`[Hiker Hall]: Read {Globals.dataStoreReader._keySize} keys.`)
+
+        -- Count players
+        local totalPlayers = 0
+        for _, userInfoMap in Globals.dataStoreReader:getCurrentData() do
+            for _, _ in userInfoMap do
+                totalPlayers += 1
+            end
+        end
+        print(`[Hiker Hall]: Total players: {totalPlayers}`)
 
         -- Load players
-        keySize = Globals.dataStoreReader._keySize
-        while Globals.loadedUsersCount < keySize do
+        while Globals.loadedUsersCount < totalPlayers do
             local phase = (time() - startTime) * Constants.loadingDotSpeed // 1 % 4
             local prefix = "Loading users" .. string.rep(".", phase)
             local loadedCount = Globals.loadedUsersCount
-            Constants.loadingUis.loading_textLabel.Text = `{prefix} ({loadedCount}/{keySize})`
+            Constants.loadingUis.loading_textLabel.Text = `{prefix} ({loadedCount}/{totalPlayers})`
             task.wait()
         end
         Constants.loadingUis.loading_textLabel.Text = `Hall of Hikers ({Globals.loadedUsersCount})`

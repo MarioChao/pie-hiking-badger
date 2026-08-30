@@ -96,10 +96,10 @@ end
 local function setButtonClaimable(textButton: TextButton, canClaim: boolean)
 	if canClaim then
 		textButton.Interactable = true
-		textButton.BackgroundColor3 = textButton:GetAttribute("EnabledColor")
+		textButton.BackgroundColor3 = textButton:GetAttribute("EnabledColor") :: Color3
 	else
 		textButton.Interactable = false
-		textButton.BackgroundColor3 = textButton:GetAttribute("DisabledColor")
+		textButton.BackgroundColor3 = textButton:GetAttribute("DisabledColor") :: Color3
 	end
 end
 
@@ -179,7 +179,7 @@ local function setUpMenuButtons()
 		end
 
 		-- Get name
-		local name = string.sub(button.Name, 1, string.find(button.Name, "_TextButton", 0, true) - 1)
+		local name = string.sub(button.Name, 1, (string.find(button.Name, "_TextButton", 0, true) or 1) - 1)
 
 		-- Set up button
 		button.Activated:Connect(function()
@@ -190,8 +190,8 @@ end
 
 local function setUpBadgesScrollingFrame()
 	-- Get template attributes
-	local ownedColor: Color3 = TemplateBadge_FrameButton:GetAttribute("OwnedColor")
-	local unownedColor: Color3 = TemplateBadge_FrameButton:GetAttribute("UnownedColor")
+	local ownedColor: Color3 = TemplateBadge_FrameButton:GetAttribute("OwnedColor") :: Color3
+	local unownedColor: Color3 = TemplateBadge_FrameButton:GetAttribute("UnownedColor") :: Color3
 
 	-- Hide template
 	TemplateBadge_FrameButton.Visible = false
@@ -217,10 +217,21 @@ local function setUpBadgesScrollingFrame()
 				local tier_TextLabel: TextLabel = details_Frame:FindFirstChild("Tier_TextLabel") :: TextLabel
 
 				-- Get badge info
-				local badgeInfo = BadgeUtil.BadgeInfo.getBadgeInfo(badgeId)
-				if not badgeInfo then
-					print(`Failed to get badge info of badge {badgeId}!`)
+				local badgeInfo
+				while true do
+					badgeInfo = BadgeUtil.BadgeInfo.getBadgeInfo(badgeId)
+					if badgeInfo and next(badgeInfo) then
+						break
+					else
+						print(`[Menu]: Failed to get badge info of badge '{badgeId}'! Retrying...`)
+						task.wait(3)
+					end
 				end
+				if not (badgeInfo and next(badgeInfo)) then
+					print(`[Menu]: Failed to get badge info of badge '{badgeId}'!`)
+					return
+				end
+
 				badgeIdInfo[badgeId] = badgeInfo
 
 				-- Set badge info

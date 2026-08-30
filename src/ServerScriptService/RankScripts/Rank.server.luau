@@ -1,58 +1,84 @@
 --!strict
+
 -- Rank Script
 
 
 ---------- Services ----------
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = script.Parent.Parent.Parent:FindFirstChild("ReplicatedStorage") or game:GetService("ReplicatedStorage")
-local ServerStorage = script.Parent.Parent.Parent:FindFirstChild("ServerStorage") or game:GetService("ServerStorage")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
 
 ---------- Imports ----------
 
-local RankThresholds = require(ReplicatedStorage.RankThresholds)
+local RankThresholds = require(ReplicatedStorage:WaitForChild("RankThresholds"))
 
-local LeaderstatsModule = require(ServerStorage.LeaderstatsModule)
+local LeaderstatsModule = require(ServerStorage:WaitForChild("LeaderstatsModule"))
 
-local DSModule = require(ServerStorage.DataStoreModule)
+local CombinedUserInfo = require(ServerStorage:WaitForChild("CombinedUserInfo"))
+local DSModule = require(ServerStorage:WaitForChild("DataStoreModule"))
 local DSTypes = DSModule.DSTypes
 
 
----------- Instances ----------
+---------- Constants ----------
 
-local BadgeEvents = ServerStorage.BadgeEvents
-local BadgeBindableFunction = BadgeEvents.BadgeBindableFunction
+local Constants = {}
 
-local RankEvents = ServerStorage.RankEvents
-local RankBindableFunction = RankEvents.RankBindableFunction
+do
+	local _BadgeEvents = ServerStorage.BadgeEvents
+	Constants.badgeBindableFunction = _BadgeEvents.BadgeBindableFunction
+end
 
-local MenuEvents = ReplicatedStorage.MenuEvents
-local MenuRemote = MenuEvents.MenuRemote
+do
+	local _RankEvents = ServerStorage.RankEvents
+	Constants.rankBindableFunction = _RankEvents.RankBindableFunction
+end
+
+do
+	local _MenuEvents = ReplicatedStorage.MenuEvents
+	Constants.menuRemote = _MenuEvents.MenuRemote
+end
+
+Constants.badgeTierIds = RankThresholds.badgeTierIds
+Constants.rankThresholds = RankThresholds.rankThresholds
+
+table.freeze(Constants)
 
 
----------- Variables ----------
+---------- Globals ----------
 
-local badgeTierIds = RankThresholds.badgeTierIds
-local rankThresholds = RankThresholds.rankThresholds
+local Globals = {}
 
-local testedPlayerRank: {[number]: number} = {}
+Globals.testedPlayerRank = {} :: {[number]: string?}
 
 
 ---------- Local functions ----------
 
-local function checkAllBadges(player: Player)
+local checkAllBadges
+local countBadges
+local getRank_fromBadges
+local testAndGetRank
+local getTestedRank
+
+local onPlayerAdded
+local onPlayerRemoving
+
+
+----- Rank check -----
+
+checkAllBadges = function(player: Player)
 	local allBadgeIds = {}
-	for _, badgeIds in badgeTierIds do
+	for _, badgeIds in Constants.badgeTierIds do
 		for _, badgeId in badgeIds do
 			table.insert(allBadgeIds, badgeId)
 		end
 	end
-	BadgeBindableFunction:Invoke("CheckPlayerBadges", player, allBadgeIds)
+	Constants.badgeBindableFunction:Invoke("CheckPlayerBadges", player, allBadgeIds)
 end
 
-local function countBadges(player: Player, badgeIds: {number})
-	local checkResult = BadgeBindableFunction:Invoke("CheckPlayerBadges", player, badgeIds)
+countBadges = function(player: Player, badgeIds: {number})
+	local checkResult = Constants.badgeBindableFunction:Invoke("CheckPlayerBadges", player, badgeIds)
 	local count = 0
 	for _, isAwarded in checkResult do
 		if isAwarded then
@@ -62,17 +88,17 @@ local function countBadges(player: Player, badgeIds: {number})
 	return count
 end
 
-local function getRank_fromBadges(player: Player)
+getRank_fromBadges = function(player: Player)
 	-- Check all badges
 	checkAllBadges(player)
 
 	-- Check rank badges
-	for _, rankThreshold in rankThresholds do
+	for _, rankThreshold in Constants.rankThresholds do
 		-- Check conditions
 		local conditionMet = true
 		for _, condition in rankThreshold.conditions do
 			-- Validate minimum badges
-			if countBadges(player, badgeTierIds[condition.badgeTier]) < condition.minimumBadges then
+			if countBadges(player, Constants.badgeTierIds[condition.badgeTier]) < condition.minimumBadges then
 				conditionMet = false
 				break
 			end
@@ -89,53 +115,67 @@ local function getRank_fromBadges(player: Player)
 	return "???"
 end
 
-local function testAndGetRank(player: Player)
+testAndGetRank = function(player: Player)
 	local rank = getRank_fromBadges(player)
-	testedPlayerRank[player.UserId] = rank
+	Globals.testedPlayerRank[player.UserId] = rank
 	return rank
 end
 
-local function getTestedRank(player: Player)
-	return testedPlayerRank[player.UserId]
+getTestedRank = function(player: Player)
+	return Globals.testedPlayerRank[player.UserId]
 end
 
 
----------- Event functions ----------
+----- Player -----
 
-local function onRankInvoke(mode: string, ...)
-	if mode == "TestAndGetPlayerRank" then
-		return testAndGetRank(...)
-	elseif mode == "GetPlayerTestedRank" then
-		return getTestedRank(...)
-	end
-end
-
-local function onPlayerAdded(player: Player)
+onPlayerAdded = function(player: Player)
 	-- Retrieve tested rank
-	local testedRank = DSModule.getData(DSTypes.DSName.TestedRank, player)
-	testedPlayerRank[player.UserId] = testedRank
+	local testedRank = DSModule.getData_player(DSTypes.DSName.TestedRank, player)
+	Globals.testedPlayerRank[player.UserId] = testedRank
 	LeaderstatsModule.setData(player, "Rank", testedRank)
-	MenuRemote:FireClient(player, "UpdateRank", testedRank)
+	Constants.menuRemote:FireClient(player, "UpdateRank", testedRank)
 end
 
-local function onPlayerRemoving(player: Player)
-	-- Store tested rank & remove from table
-	local testedRank = testedPlayerRank[player.UserId]
-	DSModule.setData(DSTypes.DSName.TestedRank, player, testedRank)
-	testedPlayerRank[player.UserId] = nil
-end
-
-
----------- Calling / connecting functions ----------
-
-RankBindableFunction.OnInvoke = onRankInvoke
-
-local initialPlayers = Players:GetPlayers()
-task.defer(function()
-	for _, player in initialPlayers do
-		onPlayerAdded(player)
+onPlayerRemoving = function(player: Player)
+	-- Store tested rank
+	local testedRank = Globals.testedPlayerRank[player.UserId]
+	if testedRank then
+		DSModule.setData_player(DSTypes.DSName.TestedRank, player, testedRank)
+		CombinedUserInfo.updateUserInfo(player.UserId, {
+			rank = testedRank,
+			username = player.Name,
+		})
 	end
-end)
-Players.PlayerAdded:Connect(onPlayerAdded)
 
-Players.PlayerRemoving:Connect(onPlayerRemoving)
+	-- Remove from table
+	Globals.testedPlayerRank[player.UserId] = nil
+end
+
+
+----- Main -----
+
+local function main()
+	Constants.rankBindableFunction.OnInvoke = function(mode: string, ...): any
+		if mode == "TestAndGetPlayerRank" then
+			return testAndGetRank(...)
+		elseif mode == "GetPlayerTestedRank" then
+			return getTestedRank(...)
+		end
+		return nil
+	end
+
+	local initialPlayers = Players:GetPlayers()
+	task.defer(function()
+		for _, player in initialPlayers do
+			onPlayerAdded(player)
+		end
+	end)
+	Players.PlayerAdded:Connect(onPlayerAdded)
+
+	Players.PlayerRemoving:Connect(onPlayerRemoving)
+end
+
+
+---------- Calling function ----------
+
+main()

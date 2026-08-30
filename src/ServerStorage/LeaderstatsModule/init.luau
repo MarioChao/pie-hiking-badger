@@ -6,7 +6,7 @@
 
 local RunService = game:GetService("RunService")
 if not RunService:IsServer() then
-	return {}
+	warn(`[Leaderstats Module]: Module should only be required from the server!`)
 end
 
 
@@ -33,7 +33,7 @@ table.freeze(ValueType)
 
 export type InitialStats = {
 	[string]: {
-		ValueType: typeof(ValueType),
+		ValueType: "StringValue" | "IntValue" | "BoolValue" | "NumberValue",
 		DefaultValue: any,
 	}
 }
@@ -53,19 +53,29 @@ local function setPlayerDefaultLeaderstats(player: Player)
 	return leaderstats
 end
 
-local function getLeaderstats(player: Player)
+local function getLeaderstats(player: Player): Instance
 	local leaderstats = player:WaitForChild("leaderstats", 5)
-	if not leaderstats then
+	local result
+	if leaderstats then
+		result = leaderstats
+	else
 		print(`Leaderstats isn't initialized for Player {player.UserId}!`)
-		leaderstats = setPlayerDefaultLeaderstats(player)
+		result = setPlayerDefaultLeaderstats(player)
 	end
-	return leaderstats
+	return result
 end
 
-local function getStatInstance(player: Player, statName: string)
+local function getStatInstance(player: Player, statName: string): ValueBase & {Value: string | number | boolean}
 	local leaderstats = getLeaderstats(player)
 	local stat = leaderstats:FindFirstChild(statName)
-	return stat
+	local result
+	if stat and stat:IsA("ValueBase") then
+		result = stat
+	else
+		warn(`[Leaderstats Module]: No '{statName}' of type ValueBase found in leaderstats!'`)
+		result = Instance.new("IntValue")
+	end
+	return result :: ValueBase & {Value: any}
 end
 
 
@@ -73,7 +83,7 @@ end
 
 local function initializeLeaderstats(initialStats: InitialStats)
 	for statName, valueInfo in initialStats do
-		local valueObject = Instance.new(valueInfo.ValueType)
+		local valueObject = Instance.new(valueInfo.ValueType) :: ValueBase & {Value: string | number | boolean}
 		valueObject.Name = statName
 		valueObject.Value = valueInfo.DefaultValue
 		valueObject.Parent = DefaultLeaderstatsFolder
@@ -93,7 +103,7 @@ local function setData(player: Player, statName: string, value: any)
 	end
 end
 
-local function getData(player: Player, statName: string)
+local function getData(player: Player, statName: string): any
 	local stat = getStatInstance(player, statName)
 	local success, result = pcall(function()
 		return stat.Value

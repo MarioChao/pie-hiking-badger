@@ -1,10 +1,15 @@
 --!strict
+
 -- Server Handler Script
 
 
----------- Instances ----------
+---------- Constants ----------
 
-local RankThreshold_RemoteFunction = script.Parent.RankThreshold_RemoteFunction
+local Constants = {}
+
+Constants.rankThreshold_RemoteFunction = script.Parent:WaitForChild("RankThreshold_RemoteFunction")
+
+table.freeze(Constants)
 
 
 ---------- Imports ----------
@@ -12,7 +17,7 @@ local RankThreshold_RemoteFunction = script.Parent.RankThreshold_RemoteFunction
 local RankThresholds = require(script.Parent)
 
 
----------- Event functions ----------
+---------- Local functions ----------
 
 local function onRankThresholdServerInvoke(player: Player, mode: string, ...)
 	if mode == "Get Rank Thresholds" then
@@ -22,6 +27,13 @@ local function onRankThresholdServerInvoke(player: Player, mode: string, ...)
 end
 
 
----------- Calling / connecting functions ----------
+----- Main -----
 
-RankThreshold_RemoteFunction.OnServerInvoke = onRankThresholdServerInvoke
+local function main()
+	Constants.rankThreshold_RemoteFunction.OnServerInvoke = onRankThresholdServerInvoke
+end
+
+
+---------- Calling function ----------
+
+main()

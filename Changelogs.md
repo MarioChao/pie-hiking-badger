@@ -1,5 +1,14 @@
 # Changelogs
 
+## [v1.1.0] Data optimization | 2026/08/30
+
+Added new data store `CombinedUserInfo` for retrieving all ranks & usernames more efficiently.
+- Migrated the Hiker Hall to use this data store, greatly improving the retrieval time.
+- Also allows much more ranks to be retrieved in the future.
+- The old data store `TestedRank` is still used for storing personal rank data.
+
+Populated `CombinedUserInfo` with all data from `TestedRank` via the `DataMigration` script.
+
 ## [v1.0.3] Player name cache + Auto refresh | 2026/03/14
 
 `GetNameFromUserIdAsync()` is now cached in memory store.

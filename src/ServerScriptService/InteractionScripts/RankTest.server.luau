@@ -17,11 +17,12 @@ local LeaderstatsModule = require(ServerStorage.LeaderstatsModule)
 ---------- Instances ----------
 
 local RankTestFolder: Folder = workspace._Workspace.RankTest
-local RankTestInteraction: Folder = RankTestFolder.Interaction
-local RankTestInteractivePart: Part = RankTestInteraction.InteractivePart
-local RankTestProximityPrompt: ProximityPrompt = RankTestInteractivePart.ProximityPrompt
-local PoofAudioPlayer: AudioPlayer = RankTestInteractivePart.PoofAudioPlayer
-local PulsingAudioPlayer: AudioPlayer = RankTestInteractivePart.PulsingAudioPlayer
+local RankTestInteraction: Folder = RankTestFolder:FindFirstChild("Interaction") :: Folder
+local RankTestInteractivePart: Part = RankTestInteraction:FindFirstChild("InteractivePart") :: Part
+local RankTestProximityPrompt: ProximityPrompt = RankTestInteractivePart:FindFirstChild("ProximityPrompt") :: ProximityPrompt
+local PoofAudioPlayer: AudioPlayer = RankTestInteractivePart:FindFirstChild("PoofAudioPlayer") :: AudioPlayer
+local PulsingAudioPlayer: AudioPlayer = RankTestInteractivePart:FindFirstChild("PulsingAudioPlayer") :: AudioPlayer
+local RankTestParticleParts = RankTestInteraction:FindFirstChild("ParticleParts") :: Folder
 
 local RankEvents = ServerStorage.RankEvents
 local RankBindableFunction = RankEvents.RankBindableFunction
@@ -94,7 +95,7 @@ local function displayRank(player: Player)
 
 	-- Display rank particles
 	ParticleRemote:FireAllClients("ShowTextParticles", rank, 32, RankTestInteractivePart)
-	ParticleRemote:FireAllClients("ShowTextParticles", rank, 1, RankTestInteraction.ParticleParts)
+	ParticleRemote:FireAllClients("ShowTextParticles", rank, 1, RankTestParticleParts)
 end
 
 

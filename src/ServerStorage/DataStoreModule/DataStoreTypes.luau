@@ -1,23 +1,26 @@
 --!strict
--- DataStore Types Module Script
+
+-- DataStore Types
+
 
 ---------- Types ----------
 
 local DSName = {
-	TestedRank = "TestedRank"
+	CombinedUserInfo = "CombinedUserInfo" :: DSName,
+	TestedRank = "TestedRank" :: DSName,
 }
-export type DSName = typeof(DSName)
+
+export type DSName = "CombinedUserInfo" | "TestedRank"
 
 
 ---------- Module ----------
 
 local DataStoreTypes = {
-	DSName = DSName
+	DSName = DSName,
 }
-
-table.freeze(DataStoreTypes)
 
 
 ---------- Return module ----------
 
+table.freeze(DataStoreTypes)
 return DataStoreTypes

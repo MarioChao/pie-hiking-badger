@@ -4,8 +4,11 @@ version = "0.0.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 
+private = true
+
 [dependencies]
+BackpackUI = "mariochao/backpack-ui@1.1.1"
 BadgeUtil = "mariochao/badge-util@^0.0.2"
 
 [server-dependencies]
-DataStoreReader = "mariochao/data-store-reader@0.0.3"
+DataStoreReader = "mariochao/data-store-reader@0.0.4"

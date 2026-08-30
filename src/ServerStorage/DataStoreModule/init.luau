@@ -1,4 +1,5 @@
 --!strict
+
 -- DataStore Module Script
 
 
@@ -6,7 +7,7 @@
 
 local RunService = game:GetService("RunService")
 if not RunService:IsServer() then
-	return {}
+	warn(`[Data Store Module]: Module should only be required from the server!`)
 end
 
 
@@ -44,9 +45,8 @@ local function getDataStore(name: DSTypes.DSName)
 	return dataStore
 end
 
-local function setData(name: DSTypes.DSName, player: Player, value: any)
+local function setData_key(name: DSTypes.DSName, key: string, value: any)
 	local dataStore = getDataStore(name)
-	local key = getPlayerKey(player)
 
 	-- Set data
 	local success, result
@@ -64,9 +64,30 @@ local function setData(name: DSTypes.DSName, player: Player, value: any)
 	end
 end
 
-local function getData(name: DSTypes.DSName, player: Player)
+local function updateData_key(
+	name: DSTypes.DSName, key: string,
+	transformFunction: (oldValue: any, dataStoreKeyInfo: DataStoreKeyInfo?) -> (any, {number}?, {any}?)
+)
 	local dataStore = getDataStore(name)
-	local key = getPlayerKey(player)
+
+	-- Update data
+	local success, result
+	local trials = 0
+	while not success and trials < MAX_TRIALS do
+		success, result = pcall(function()
+			return dataStore:UpdateAsync(key, transformFunction)
+		end)
+		trials += 1
+	end
+
+	-- Print error result if failed
+	if not success then
+		print(result)
+	end
+end
+
+local function getData_key(name: DSTypes.DSName, key: string)
+	local dataStore = getDataStore(name)
 
 	-- Get data
 	local success, result
@@ -88,6 +109,16 @@ local function getData(name: DSTypes.DSName, player: Player)
 	return result
 end
 
+local function setData_player(name: DSTypes.DSName, player: Player, value: any)
+	local key = getPlayerKey(player)
+	setData_key(name, key, value)
+end
+
+local function getData_player(name: DSTypes.DSName, player: Player)
+	local key = getPlayerKey(player)
+	return getData_key(name, key)
+end
+
 
 ---------- Module variables  ----------
 
@@ -96,10 +127,15 @@ DataStoreModule.DSTypes = DSTypes
 
 ---------- Module functions ----------
 
-DataStoreModule.setData = setData
-DataStoreModule.getData = getData
+DataStoreModule.setData_player = setData_player
+DataStoreModule.getData_player = getData_player
+
+DataStoreModule.setData_key = setData_key
+DataStoreModule.getData_key = getData_key
+DataStoreModule.updateData_key = updateData_key
 
 
 ---------- Return module ----------
 
+table.freeze(DataStoreModule)
 return DataStoreModule
