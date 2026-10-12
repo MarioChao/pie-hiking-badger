@@ -1,6 +1,24 @@
 # Changelogs
 
-## [v1.1.1] Badge scripts refactoring | 2026/10/11
+## [v1.1.2] Badge filter + Gui scaling + Optimization | 2026/10/11 (2)
+
+Added filtering and sorting for pie hiking challenges.
+- Filter:
+  - Plaintext search (creator, game name, badge name, badge description, tier).
+  - Badge ownership (all, own, not owned).
+- Sort:
+  - Default.
+  - Ascending/descending tier (`+ Tier`, `- Tier`).
+  - Ascending/descending badge name (`+ Name`, `- Name`).
+- These are optimized such that updates are applied only when a setting is modified.
+
+Added `AutoUIScale` for the menu gui. The code is adapted from the [Pie Hiking Plugin](https://github.com/MarioChao/pie-hiking-plugin/).
+
+Made some optimizations on loading pie hiking challenges.
+- Initially, all badge frames are loaded from stored data.
+- Specific badge data (name, description, icon) are loaded & updated later. This step can take some time due to the `BadgeService` rate limit.
+
+## [v1.1.1] Badge scripts refactoring | 2026/10/11 (1)
 
 Replaced `BadgeEvents` and the `Badge` server script with direct calls to `BadgeUtil`.
 
