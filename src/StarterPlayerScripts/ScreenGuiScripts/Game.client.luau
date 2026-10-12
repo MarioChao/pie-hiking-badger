@@ -16,13 +16,13 @@ local PlayerGui = LocalPlayer.PlayerGui
 
 ---------- Gui instances ----------
 
-local Game_ScreenGui: ScreenGui = PlayerGui:WaitForChild("Game_ScreenGui")
-local Menu_TextButton: TextButton = Game_ScreenGui.Menu_TextButton
+local Game_ScreenGui = PlayerGui:WaitForChild("Game_ScreenGui") :: ScreenGui
+local Menu_TextButton = Game_ScreenGui:WaitForChild("Menu_TextButton") :: TextButton
 
 
-local Menu_ScreenGui: ScreenGui = PlayerGui:WaitForChild("Menu_ScreenGui")
+local Menu_ScreenGui = PlayerGui:WaitForChild("Menu_ScreenGui") :: ScreenGui
 
-local GameInfo_ScreenGui: ScreenGui = PlayerGui:WaitForChild("GameInfo_ScreenGui")
+local GameInfo_ScreenGui = PlayerGui:WaitForChild("GameInfo_ScreenGui") :: ScreenGui
 
 
 ---------- Event functions ----------

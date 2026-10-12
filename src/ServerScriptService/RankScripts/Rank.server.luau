@@ -20,15 +20,13 @@ local CombinedUserInfo = require(ServerStorage:WaitForChild("CombinedUserInfo"))
 local DSModule = require(ServerStorage:WaitForChild("DataStoreModule"))
 local DSTypes = DSModule.DSTypes
 
+local _Modules = ReplicatedStorage:WaitForChild("Modules")
+local BadgeUtil = require(_Modules:WaitForChild("BadgeUtil"))
+
 
 ---------- Constants ----------
 
 local Constants = {}
-
-do
-	local _BadgeEvents = ServerStorage.BadgeEvents
-	Constants.badgeBindableFunction = _BadgeEvents.BadgeBindableFunction
-end
 
 do
 	local _RankEvents = ServerStorage.RankEvents
@@ -74,11 +72,11 @@ checkAllBadges = function(player: Player)
 			table.insert(allBadgeIds, badgeId)
 		end
 	end
-	Constants.badgeBindableFunction:Invoke("CheckPlayerBadges", player, allBadgeIds)
+	BadgeUtil.CachedBadgeCheck.checkUserHasBadges(player.UserId, allBadgeIds)
 end
 
 countBadges = function(player: Player, badgeIds: {number})
-	local checkResult = Constants.badgeBindableFunction:Invoke("CheckPlayerBadges", player, badgeIds)
+	local checkResult = BadgeUtil.CachedBadgeCheck.checkUserHasBadges(player.UserId, badgeIds)
 	local count = 0
 	for _, isAwarded in checkResult do
 		if isAwarded then

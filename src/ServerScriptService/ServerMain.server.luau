@@ -6,6 +6,7 @@
 ---------- Imports ----------
 
 local DataMigration = require(script.Parent:WaitForChild("DataMigration"):WaitForChild("Main"))
+local GiveRankBadge = require(script.Parent:WaitForChild("GiveRankBadge"):WaitForChild("Main"))
 
 
 ---------- Local functions ----------
@@ -13,7 +14,8 @@ local DataMigration = require(script.Parent:WaitForChild("DataMigration"):WaitFo
 ----- Main -----
 
 local function main()
-    DataMigration.start()
+    -- DataMigration.start()
+    GiveRankBadge.start()
 end
 
 

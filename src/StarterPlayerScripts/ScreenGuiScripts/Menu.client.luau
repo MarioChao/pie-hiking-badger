@@ -14,6 +14,7 @@ local RunService = game:GetService("RunService")
 
 local _Modules = ReplicatedStorage:WaitForChild("Modules")
 local BadgeUtil = require(_Modules:WaitForChild("BadgeUtil"))
+local BelovedRemote = require(_Modules:WaitForChild("BelovedRemote"))
 
 local RankTresholds = require(ReplicatedStorage:WaitForChild("RankThresholds"))
 
@@ -26,9 +27,6 @@ type RankBadge = {
 
 
 ---------- Instances ----------
-
-local GiveRankBadgeEvents = ReplicatedStorage:WaitForChild("GiveRankBadgeEvents")
-local GiveRankBadgeRemote = GiveRankBadgeEvents.GiveRankBadgeRemote
 
 local MenuEvents = ReplicatedStorage:WaitForChild("MenuEvents")
 local MenuRemote = MenuEvents.MenuRemote
@@ -72,7 +70,7 @@ local TemplateRankInfo_Frame: Frame = RanksInfo_ScrollingFrame:WaitForChild("Tem
 local rankPriority = RankTresholds.rankPriority
 
 local badgeIdOwned: {[number]: boolean} = {}
-local badgeIdInfo: {[number]: BadgeUtil.BadgeInfo} = {}
+local badgeIdInfo: {[number]: typeof(BadgeUtil.BadgeInfo.getBadgeInfo(0))} = {}
 
 local tierOwnedBadgesCount: {number} = {}
 
@@ -312,7 +310,7 @@ local function setUpAwardsScrollingFrame()
 		local isRankReached = getIsRankReached(rank)
 		setButtonClaimable(claim_TextButton, isRankReached)
 		claim_TextButton.Activated:Connect(function()
-			GiveRankBadgeRemote:FireServer("GiveBadgeWithRank", rank)
+			BelovedRemote.fire_toServer("GiveBadgeWithRank", rank)
 		end)
 
 		-- Set frame properties

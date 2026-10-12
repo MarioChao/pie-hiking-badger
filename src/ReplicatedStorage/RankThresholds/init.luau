@@ -16,7 +16,11 @@ end
 
 type BadgeTierInfo = {
 	badgeId: number,
+	placeId: number,
 	tier: number,
+	badgeName: string,
+	gameName: string,
+	creator: string,
 }
 
 type MinBadgeCondition = {

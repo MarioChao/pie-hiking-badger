@@ -1,5 +1,13 @@
 # Changelogs
 
+## [v1.1.1] Badge scripts refactoring | 2026/10/11
+
+Replaced `BadgeEvents` and the `Badge` server script with direct calls to `BadgeUtil`.
+
+Refactored `GiveRankBadge` into a module.
+* Migrated `GiveRankBadgeRemote` to [`BelovedRemote`](https://github.com/MarioChao/beloved-remote).
+* The module is activated through `ServerMain`.
+
 ## [v1.1.0] Data optimization | 2026/08/30
 
 Added new data store `CombinedUserInfo` for retrieving all ranks & usernames more efficiently.
