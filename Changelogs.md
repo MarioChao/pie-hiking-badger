@@ -17,6 +17,7 @@ Added filtering and sorting for pie hiking challenges.
   - Ascending/descending tier (`+ Tier`, `- Tier`).
   - Ascending/descending badge name (`+ Name`, `- Name`).
 - These are optimized such that updates are applied only when a setting is modified.
+- System inspired by that used in [Badge Points](https://www.roblox.com/games/88622467292584/Badge-Points).
 
 Added `AutoUIScale` for the menu gui. The code is adapted from the [Pie Hiking Plugin](https://github.com/MarioChao/pie-hiking-plugin/).
 
