@@ -15,12 +15,13 @@ local TeleportService = game:GetService("TeleportService")
 local RankThresholds = require(ReplicatedStorage:WaitForChild("RankThresholds"))
 
 local _Modules = ReplicatedStorage:WaitForChild("Modules")
-local BadgeUtil = require(_Modules:WaitForChild("BadgeUtil"))
 
 
 ---------- Types ----------
 
 type InstanceLike = Instance & {[string]: Instance}
+
+type BadgeNameInfo = {Name: string}
 
 
 ---------- Instances ----------
@@ -85,7 +86,7 @@ end
 
 ---------- Local functions ----------
 
-local function showBadgeInfo(badgeId: number, badgeInfo: BadgeUtil.BadgeInfo)
+local function showBadgeInfo(badgeId: number, badgeInfo: BadgeNameInfo)
 	-- Get place id
 	local placeId = badgePlaceId[tostring(badgeId)]
 	targetPlaceId = placeId
@@ -105,7 +106,7 @@ local function showBadgeInfo(badgeId: number, badgeInfo: BadgeUtil.BadgeInfo)
 	GameInfo_ScreenGui.Enabled = true
 end
 
-local function onToggleShowBadgeInfo(badgeId: number, badgeInfo: BadgeUtil.BadgeInfo)
+local function onToggleShowBadgeInfo(badgeId: number, badgeInfo: BadgeNameInfo)
 	-- Check if badge id already displayed
 	if GameInfo_ScreenGui.Enabled and badgeId == displayedBadgeId then
 		-- Hide badge info

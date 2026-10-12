@@ -1,5 +1,11 @@
 # Changelogs
 
+## [v1.1.3] Badge claimed indicator | 2026/10/11 (3)
+
+Already-claimed rank badges are now indicated in the `Awards` subdock.
+
+Fixed badges not loading due to content distribution being disabled (by uploading the main module to my account).
+
 ## [v1.1.2] Badge filter + Gui scaling + Optimization | 2026/10/11 (2)
 
 Added filtering and sorting for pie hiking challenges.

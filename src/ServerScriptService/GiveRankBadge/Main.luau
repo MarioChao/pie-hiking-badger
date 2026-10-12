@@ -89,6 +89,9 @@ onGiveBadgeWithRank = function(player: Player, rank: string)
 	local badgeId = RankBadge[rank].badgeId
 	local badgeName = RankBadge[rank].badgeName
 	BadgeUtil.awardBadgeLoop(player, badgeId, badgeName)
+
+	-- Notify badge awarded
+	BelovedRemote.fire_toClient("GiveBadgeWithRankSuccess", player, rank)
 end
 
 

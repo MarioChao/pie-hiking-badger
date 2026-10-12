@@ -45,4 +45,4 @@ type RankThresholds = {
 
 ---------- Return module ----------
 
-return require(106825359403933) :: RankThresholds
+return require(92766250045902) :: RankThresholds

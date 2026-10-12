@@ -20,6 +20,8 @@ local AutoUIScale = require(script.Parent:WaitForChild("AutoUIScale"))
 
 local RankThresholds = require(ReplicatedStorage:WaitForChild("RankThresholds"))
 
+local RankBadgeClient = require(script.Parent:WaitForChild("rank-badge-client"))
+
 type RankBadge = {
 	[string]: {
 		badgeId: number,
@@ -56,6 +58,20 @@ Constants.rankPriority = RankThresholds.rankPriority
 
 Constants.sortTypes = {"Default", "+ Tier", "- Tier", "+ Name", "- Name"}
 Constants.showTypes = {"All", "Owned", "Not Owned"}
+
+do
+	Constants.rankBadgeIds = {}
+	Constants.badgeIdNum_rank = {} :: {[number]: string}
+	for rank, badgeId in RankBadgeClient do
+		local rankStr = tostring(rank)
+		local badgeIdNum = tonumber(badgeId)
+		if badgeIdNum then
+			table.insert(Constants.rankBadgeIds, badgeIdNum)
+			Constants.badgeIdNum_rank[badgeIdNum] = rankStr
+		end
+	end
+	table.freeze(Constants.rankBadgeIds)
+end
 
 
 ----- Gui instances -----
@@ -123,6 +139,8 @@ Globals.sortTypeIndex = 1
 Globals.showTypeIndex = 1
 Globals.badgeId_alphabeticalIndex = {} :: {[string]: number}
 
+Globals.rank_isClaimed = {} :: {[string]: boolean?}
+
 Globals.setUpStates = {} :: {[string]: true?}
 
 local playerRank
@@ -132,8 +150,9 @@ local playerRank
 
 local getIsRankReached
 local setButtonClaimable
-local checkAllBadges
-local checkBadges
+local checkRankBadgesUntilSuccess
+local checkAllTieredBadges
+local checkTieredBadgesUntilSuccess
 local getIsStringMatchesPlain
 
 local getLayoutOrder
@@ -166,17 +185,54 @@ getIsRankReached = function(rank: string)
 	return true
 end
 
-setButtonClaimable = function(textButton: TextButton, canClaim: boolean)
-	if canClaim then
+setButtonClaimable = function(textButton: TextButton, canClaim: boolean, isClaimed: boolean)
+	if isClaimed then
+		textButton.Text = "Claimed"
+		textButton.Interactable = false
+		textButton.BackgroundColor3 = textButton:GetAttribute("ClaimedColor") :: Color3
+	elseif canClaim then
+		textButton.Text = "Claim"
 		textButton.Interactable = true
 		textButton.BackgroundColor3 = textButton:GetAttribute("EnabledColor") :: Color3
 	else
+		textButton.Text = "Claim"
 		textButton.Interactable = false
 		textButton.BackgroundColor3 = textButton:GetAttribute("DisabledColor") :: Color3
 	end
 end
 
-checkAllBadges = function(player: Player)
+checkRankBadgesUntilSuccess = function()
+	local player = Constants.localPlayer
+	local badgeIds = Constants.rankBadgeIds
+	repeat
+		-- Initialize table
+		local uncachedBadgeIds: {number} = {}
+
+		-- Check badges
+		local checkResult = BadgeUtil.CachedBadgeCheck.checkUserHasBadges(player.UserId, badgeIds)
+
+		-- Check results
+		for _, badgeId in badgeIds do
+			-- Check result available
+			if checkResult[badgeId] == nil then
+				table.insert(uncachedBadgeIds, badgeId)
+				continue
+			end
+
+			-- Set owned
+			Globals.rank_isClaimed[Constants.badgeIdNum_rank[badgeId]] = checkResult[badgeId]
+		end
+
+		-- Replace badge ids with uncached
+		badgeIds = uncachedBadgeIds
+		if #uncachedBadgeIds > 0 then
+			print("[Menu]: Some badges not checked!")
+			task.wait(10)
+		end
+	until #uncachedBadgeIds == 0
+end
+
+checkAllTieredBadges = function(player: Player)
 	local allBadgeIds = {}
 	for _, badgeIds in RankThresholds.badgeTierIds do
 		for _, badgeId in badgeIds do
@@ -186,9 +242,9 @@ checkAllBadges = function(player: Player)
 	BadgeUtil.CachedBadgeCheck.checkUserHasBadges(player.UserId, allBadgeIds)
 end
 
-checkBadges = function()
+checkTieredBadgesUntilSuccess = function()
 	-- Check all badges
-	checkAllBadges(Constants.localPlayer)
+	checkAllTieredBadges(Constants.localPlayer)
 
 	-- Go through badges
 	for tier, badgeIds in RankThresholds.badgeTierIds do
@@ -222,7 +278,7 @@ checkBadges = function()
 			-- Replace badge ids with uncached
 			badgeIds = uncachedBadgeIds
 			if #uncachedBadgeIds > 0 then
-				print("Some badges not checked!")
+				print("[Menu]: Some badges not checked!")
 				task.wait(10)
 			end
 		until #uncachedBadgeIds == 0
@@ -611,7 +667,7 @@ setUpAwardsScrollingFrame = function()
 
 		-- Set button data
 		local isRankReached = getIsRankReached(rank)
-		setButtonClaimable(claim_TextButton, isRankReached)
+		setButtonClaimable(claim_TextButton, isRankReached, false)
 		claim_TextButton.Activated:Connect(function()
 			BelovedRemote.fire_toServer("GiveBadgeWithRank", rank)
 		end)
@@ -620,6 +676,18 @@ setUpAwardsScrollingFrame = function()
 		awardFrame.Name = `Award_{index}_Frame`
 		awardFrame.Visible = true
 		awardFrame.Parent = Constants.screenUis.awards_ScrollingFrame
+
+		-- Update claimed text based on badge ownership
+		task.defer(function()
+			while Globals.rank_isClaimed[rank] == nil do
+				task.wait(1)
+			end
+
+			-- Set color & visibility
+			if Globals.rank_isClaimed[rank] then
+				setButtonClaimable(claim_TextButton, isRankReached, true)
+			end
+		end)
 	end
 end
 
@@ -731,7 +799,7 @@ onUpdateRank = function(newRank: string)
 
 		-- Modify gui
 		local claim_TextButton: TextButton = awardFrame:FindFirstChild("Claim_TextButton") :: TextButton
-		setButtonClaimable(claim_TextButton, isRankReached)
+		setButtonClaimable(claim_TextButton, isRankReached, Globals.rank_isClaimed[rank] == true)
 	end
 end
 
@@ -748,7 +816,8 @@ setUpMenu = function()
 	Constants.screenUis.menu_ScreenGui.Enabled = false
 	showSubdock("Challenges")
 	task.defer(setUpMenuButtons)
-	task.defer(checkBadges)
+	task.defer(checkRankBadgesUntilSuccess)
+	task.defer(checkTieredBadgesUntilSuccess)
 	task.defer(setUpBadgesScrollingFrame)
 	task.defer(_setUpFilteringBadges)
 	task.defer(setUpAwardsScrollingFrame)
@@ -758,12 +827,25 @@ setUpMenu = function()
 end
 
 
----------- Calling / connecting functions ----------
+----- Main -----
 
-Constants.menuRemote.OnClientEvent:Connect(onMenuClientEvent)
+local function main()
+	Constants.menuRemote.OnClientEvent:Connect(onMenuClientEvent)
 
-Constants.screenUis.exit_ImageButton.Activated:Connect(function()
-	Constants.screenUis.menu_ScreenGui.Enabled = false
-end)
+	Constants.screenUis.exit_ImageButton.Activated:Connect(function()
+		Constants.screenUis.menu_ScreenGui.Enabled = false
+	end)
 
-setUpMenu()
+	BelovedRemote.connect_toClient("GiveBadgeWithRankSuccess", function(rank: string)
+		Globals.rank_isClaimed[rank] = true
+		onUpdateRank(playerRank)
+	end)
+	BelovedRemote.belovePlayer_RE_toServer("GiveBadgeWithRankSuccess")
+
+	setUpMenu()
+end
+
+
+---------- Calling function ----------
+
+main()
