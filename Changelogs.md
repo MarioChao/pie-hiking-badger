@@ -1,5 +1,9 @@
 # Changelogs
 
+## [v1.2.0] Backpack UI v1.2.0 | 2026/10/25
+
+Updated backpack ui to v1.2.0, which added mobile support.
+
 ## [v1.1.3] Badge claimed indicator | 2026/10/11 (3)
 
 Already-claimed rank badges are now indicated in the `Awards` subdock.
