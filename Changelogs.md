@@ -1,8 +1,8 @@
 # Changelogs
 
-## [v1.2.0] Backpack UI v1.2.0 | 2026/10/25
+## [v1.1.4] Backpack UI v1.2.1 | 2026/10/25
 
-Updated backpack ui to v1.2.0, which added mobile support.
+Updated backpack ui to v1.2.1, which added mobile support.
 
 ## [v1.1.3] Badge claimed indicator | 2026/10/11 (3)
 
